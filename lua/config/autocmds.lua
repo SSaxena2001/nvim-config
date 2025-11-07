@@ -22,6 +22,12 @@ vim.api.nvim_create_autocmd("FileType", {
   end,
 })
 
+vim.api.nvim_create_autocmd("FileType", {
+  callback = function()
+    vim.opt_local.formatoptions:remove({ "c", "r", "o" })
+  end,
+})
+
 local esc = vim.api.nvim_replace_termcodes("<Esc>", true, true, true)
 
 vim.api.nvim_create_augroup("JSLogMacro", { clear = true })

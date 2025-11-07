@@ -19,6 +19,9 @@ keymap.set("n", "<Leader>D", '"_D')
 keymap.set("v", "<Leader>d", '"_d')
 keymap.set("v", "<Leader>D", '"_D')
 
+keymap.set("v", "J", ":m '>+1<CR>gv=gv")
+keymap.set("v", "K", ":m '<-2<CR>gv=gv")
+
 -- Increment/decrement
 keymap.set("n", "+", "<C-a>")
 keymap.set("n", "-", "<C-x>")
@@ -76,26 +79,3 @@ end, {})
 keymap.set("i", "<C-h>", function()
   vim.lsp.buf.signature_help()
 end, {})
-
-local actions = require("telescope.actions")
-local action_state = require("telescope.actions.state")
-
-keymap.set("n", ";s", function()
-  -- Open telescope lsp_references picker
-  require("telescope.builtin").lsp_references({
-    attach_mappings = function(prompt_bufnr, map)
-      -- Map <CR> in picker to open in new tab
-      map("i", "<CR>", function()
-        local selection = action_state.get_selected_entry()
-        actions.close(prompt_bufnr)
-        if not selection then
-          return
-        end
-        -- Open file in new tab at line and column
-        vim.cmd("tabnew " .. selection.filename)
-        vim.api.nvim_win_set_cursor(0, { selection.lnum, selection.col - 1 })
-      end)
-      return true
-    end,
-  })
-end, { desc = "LSP references picker - enter to open in new tab" })
