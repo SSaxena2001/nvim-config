@@ -23,5 +23,23 @@ return {
       },
     },
     inlay_hints = { enabled = false },
+    servers = {
+      vstls = {
+        settings = {
+          typescript = {
+            tsserver = { maxTsServerMemory = 12000 },
+            suggest = { enabled = true, completeFunctionCalls = true },
+            inlayHints = {
+              variableTypes = { enabled = true },
+              parameterTypes = { enabled = true },
+              enumMemberValues = { enabled = true },
+              parameterNames = { enabled = "literals" },
+              functionLikeReturnTypes = { enabled = true },
+              propertyDeclarationTypes = { enabled = true },
+            },
+          },
+        },
+      },
+    },
   },
 }

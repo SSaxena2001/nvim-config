@@ -61,13 +61,29 @@ keymap.set("n", "<C-w><right>", "<C-w>>")
 keymap.set("n", "<C-w><up>", "<C-w>+")
 keymap.set("n", "<C-w><down>", "<C-w>-")
 
+keymap.set("n", "<leader>tt", function()
+  require("trouble").toggle()
+end)
+
+keymap.set("n", "[t", function()
+  require("trouble").next({ skip_groups = true, jump = true })
+end)
+
+keymap.set("n", "]t", function()
+  require("trouble").previous({ skip_groups = true, jump = true })
+end)
+
+keymap.set("n", "<leader>bf", function()
+  require("conform").format({ bufnr = 0 })
+end)
+
 -- Diagnostics
 keymap.set("n", "<C-j>", function()
   vim.diagnostic.get_next()
 end, opts)
 
 keymap.set("n", "<leader>i", function()
-  require("craftzdog.lsp").toggleInlayHints()
+  require("acurite.lsp").toggleInlayHints()
 end)
 
 keymap.set("n", "gt", function()

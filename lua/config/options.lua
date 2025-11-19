@@ -18,7 +18,6 @@ vim.opt.showcmd = true
 vim.opt.cmdheight = 1
 vim.opt.laststatus = 3
 vim.opt.expandtab = true
-vim.opt.scrolloff = 10
 vim.opt.shell = "fish"
 vim.opt.backupskip = { "/tmp/*", "/private/tmp/*" }
 vim.opt.inccommand = "split"
@@ -27,6 +26,7 @@ vim.opt.smarttab = true
 vim.opt.breakindent = true
 vim.opt.shiftwidth = 4
 vim.opt.tabstop = 4
+vim.opt.softtabstop = 4
 vim.opt.wrap = false -- No Wrap lines
 vim.opt.backspace = { "start", "eol", "indent" }
 vim.opt.path:append({ "**" }) -- Finding files - Search down into subfolders
@@ -38,6 +38,10 @@ vim.opt.mouse = ""
 vim.g.zig_fmt_autosave = 0
 vim.o.guicursor = "n-v-c-sm:block,i:block"
 vim.opt.updatetime = 50
+
+vim.opt.scrolloff = 8
+vim.opt.signcolumn = "yes"
+vim.opt.isfname:append("@-@")
 
 vim.cmd([[let &t_Cs = "\e[4:3m"]])
 vim.cmd([[let &t_Ce = "\e[4:0m"]])
@@ -54,3 +58,4 @@ end
 
 vim.g.lazyvim_picker = "snacks"
 vim.g.lazyvim_cmp = "blink.cmp"
+vim.g.snacks_animate = false
