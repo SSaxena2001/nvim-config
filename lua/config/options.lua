@@ -38,6 +38,7 @@ vim.opt.mouse = ""
 vim.g.zig_fmt_autosave = 0
 vim.o.guicursor = "n-v-c-sm:block,i:block"
 vim.opt.updatetime = 50
+vim.o.winborder = "rounded"
 
 vim.opt.scrolloff = 8
 vim.opt.signcolumn = "yes"

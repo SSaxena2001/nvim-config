@@ -24,7 +24,15 @@ return {
     },
     inlay_hints = { enabled = false },
     servers = {
-      vstls = {
+      ts_ls = {
+        filetypes = {
+          "typescript", -- TypeScript files (.ts)
+          "javascript", -- JavaScript files (.js)
+          "javascriptreact", -- React files with JavaScript (.jsx)
+          "typescriptreact",
+          "typescript.jsx",
+          "javascript.jsx",
+        },
         settings = {
           typescript = {
             tsserver = { maxTsServerMemory = 12000 },

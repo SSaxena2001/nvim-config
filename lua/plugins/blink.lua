@@ -14,14 +14,22 @@ return {
         menu = {
           winblend = vim.o.pumblend,
           draw = { treesitter = { "lsp" } },
+          border = "single",
         },
         list = { selection = { auto_insert = true } },
-        documentation = { auto_show = true, auto_show_delay_ms = 200 },
+        documentation = {
+          auto_show = true,
+          auto_show_delay_ms = 200,
+          window = {
+            border = "single",
+          },
+        },
       },
       signature = {
         enabled = true,
         window = {
           winblend = vim.o.pumblend,
+          border = "single",
         },
       },
       keymap = {

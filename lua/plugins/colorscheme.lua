@@ -57,10 +57,12 @@ return {
     name = "rose-pine",
     config = function()
       require("rose-pine").setup({
+        variant = "moon",
+        dark_variant = "moon",
         disable_background = true,
         styles = {
           bold = true,
-          italic = true,
+          italic = false,
           transparency = true,
         },
       })

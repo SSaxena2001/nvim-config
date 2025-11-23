@@ -9,7 +9,10 @@ return {
         go = { "gofmt" },
         javascript = { "prettier" },
         typescript = { "prettier" },
+        typescriptreact = { "prettier" },
+        javascriptreact = { "prettier" },
         elixir = { "mix" },
+        rust = { "rustfmt", lsp_format = "fallback" },
       },
       formatters = {
         ["clang-format"] = {

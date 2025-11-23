@@ -1,7 +1,9 @@
 return {
-  "mbbill/undotree",
-
-  config = function()
-    vim.keymap.set("n", "<leader>u", vim.cmd.UndotreeToggle)
-  end,
+  {
+    "XXiaoA/atone.nvim",
+    cmd = "Atone",
+    config = function()
+      vim.keymap.set("n", "<leader>u", ":Atone toggle<CR>")
+    end,
+  },
 }
