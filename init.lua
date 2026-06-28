@@ -1,2 +1,5 @@
--- bootstrap lazy.nvim, LazyVim and your plugins
-require("config.lazy")
+require("acurite.core.options")
+require("acurite.core.keymaps")
+require("acurite.core.commands")
+require("acurite.core.autocmds")
+require("acurite.core.pack")
