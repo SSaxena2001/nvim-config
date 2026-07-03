@@ -3,6 +3,10 @@ local prettier_formatters = { "prettierd", "prettier", stop_after_first = true }
 
 require("conform").setup({
   notify_on_error = true,
+  format_on_save = {
+    timeout_ms = 1000,
+    lsp_format = "fallback",
+  },
   formatters_by_ft = {
     -- C/C++: clang-format is the common fast formatter used with clangd.
     c = { "clang-format" },
