@@ -13,12 +13,12 @@ require("bufferline").setup({
   },
 })
 
-local colors = require("solarized-osaka.colors").setup()
+local colors = require("rose-pine.palette")
 require("incline").setup({
   highlight = {
     groups = {
-      InclineNormal = { guibg = colors.magenta500, guifg = colors.base04 },
-      InclineNormalNC = { guifg = colors.violet500, guibg = colors.base03 },
+      InclineNormal = { guibg = colors.pine, guifg = colors.base },
+      InclineNormalNC = { guifg = colors.subtle, guibg = "NONE" },
     },
   },
   window = { margin = { vertical = 0, horizontal = 1 } },

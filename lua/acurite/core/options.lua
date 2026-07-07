@@ -56,7 +56,7 @@ vim.opt.breakindent = true
 
 -- search
 vim.opt.inccommand = "split"
-vim.opt.hlsearch = true
+vim.opt.hlsearch = false
 vim.opt.ignorecase = true -- Case insensitive searching UNLESS /C or capital in search
 vim.opt.backspace = { "start", "eol", "indent" }
 -- Avoid recursive `**` in 'path'; it can make commands like `gf` scan huge repos.

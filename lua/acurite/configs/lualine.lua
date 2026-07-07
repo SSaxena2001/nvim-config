@@ -1,6 +1,6 @@
 require("lualine").setup({
   options = {
-    theme = "solarized-osaka",
+    theme = "rose-pine",
   },
   sections = {
     lualine_c = {

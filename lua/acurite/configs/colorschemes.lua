@@ -91,5 +91,68 @@ require("rose-pine").setup({
   },
 })
 
-vim.cmd.colorscheme("solarized-osaka")
--- To switch back later: vim.cmd.colorscheme("rose-pine")
+require("vscode").setup({
+  transparent = true,
+  terminal_colors = true,
+  italic_comments = false,
+})
+
+vim.cmd.colorscheme("rose-pine-moon")
+
+local function patch_hl(group, opts)
+  local ok, hl = pcall(vim.api.nvim_get_hl, 0, { name = group, link = false })
+  if not ok then
+    return
+  end
+
+  vim.api.nvim_set_hl(0, group, vim.tbl_extend("force", hl, opts))
+end
+
+local transparent_groups = {
+  "Normal",
+  "NormalNC",
+  "NormalFloat",
+  "FloatBorder",
+  "SignColumn",
+  "StatusLine",
+  "StatusLineNC",
+  "TabLine",
+  "TabLineFill",
+  "WinBar",
+  "WinBarNC",
+}
+
+for _, group in ipairs(transparent_groups) do
+  patch_hl(group, { bg = "NONE" })
+end
+
+local italic_groups = {
+  "Keyword",
+  "Statement",
+  "Conditional",
+  "Repeat",
+  "Exception",
+  "Include",
+  "PreProc",
+  "StorageClass",
+  "Structure",
+  "@keyword",
+  "@keyword.conditional",
+  "@keyword.repeat",
+  "@keyword.return",
+  "@keyword.exception",
+  "@keyword.import",
+  "@keyword.type",
+  "@keyword.modifier",
+  "@keyword.function",
+  "@keyword.operator",
+  "@lsp.type.interface",
+  "@lsp.type.interface.typescript",
+  "@lsp.type.interface.typescriptreact",
+}
+
+for _, group in ipairs(italic_groups) do
+  patch_hl(group, { italic = true })
+end
+
+-- To switch back later: vim.cmd.colorscheme("solarized-osaka") or vim.cmd.colorscheme("vscode")
