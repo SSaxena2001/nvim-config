@@ -129,9 +129,37 @@ end
 
 keymap.set("n", "<leader>gg", open_lazygit, { desc = "Lazygit (git root)" })
 
-keymap.set("n", "<C-j>", function()
-  vim.diagnostic.jump({ count = 1, float = true })
+local diagnostic_float_opts = {
+  border = "rounded",
+  focusable = false,
+  scope = "cursor",
+  source = true,
+  header = "",
+  prefix = "",
+}
+
+local function show_diagnostic_float()
+  vim.diagnostic.open_float(nil, diagnostic_float_opts)
+end
+
+local function diagnostic_jump(count)
+  vim.diagnostic.jump({ count = count })
+  vim.defer_fn(show_diagnostic_float, 50)
+end
+
+keymap.set("n", "]d", function()
+  diagnostic_jump(1)
 end, vim.tbl_extend("force", opts, { desc = "Next diagnostic" }))
+
+keymap.set("n", "[d", function()
+  diagnostic_jump(-1)
+end, vim.tbl_extend("force", opts, { desc = "Previous diagnostic" }))
+
+keymap.set("n", "<C-j>", function()
+  diagnostic_jump(1)
+end, vim.tbl_extend("force", opts, { desc = "Next diagnostic" }))
+
+keymap.set("n", "<leader>e", show_diagnostic_float, vim.tbl_extend("force", opts, { desc = "Show line diagnostics" }))
 
 keymap.set("n", "<leader>i", function()
   vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = 0 }), { bufnr = 0 })

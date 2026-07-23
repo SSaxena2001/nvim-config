@@ -55,7 +55,10 @@ notify.setup({
     end,
   },
   lsp_progress = {
-    enable = true,
+    -- Pyright emits very chatty progress updates while typing (often repeated
+    -- "100%" messages). Disable LSP progress popups so normal notifications
+    -- remain useful without constant noise in Python buffers.
+    enable = false,
     level = "INFO",
     duration_last = 1200,
   },

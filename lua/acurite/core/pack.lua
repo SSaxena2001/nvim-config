@@ -1,6 +1,5 @@
 vim.pack.add({
   "https://github.com/craftzdog/solarized-osaka.nvim",
-  { src = "https://github.com/rose-pine/neovim", name = "rose-pine" },
   "https://github.com/folke/trouble.nvim",
   "https://github.com/folke/zen-mode.nvim",
   "https://github.com/folke/snacks.nvim",
@@ -23,7 +22,10 @@ vim.pack.add({
   "https://github.com/mason-org/mason.nvim",
   "https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim",
   { src = "https://github.com/nvim-treesitter/nvim-treesitter", version = "main" },
+  "https://github.com/nvim-treesitter/nvim-treesitter-context",
+  "https://github.com/nvim-treesitter/nvim-treesitter-textobjects",
   "https://github.com/windwp/nvim-ts-autotag",
+  "https://github.com/MeanderingProgrammer/render-markdown.nvim",
   "https://github.com/stevearc/conform.nvim",
   "https://github.com/mfussenegger/nvim-lint",
   "https://github.com/nvim-tree/nvim-web-devicons",
@@ -39,6 +41,7 @@ require("acurite.configs.blink-cmp")
 require("acurite.configs.mason")
 require("acurite.configs.lsp-config")
 require("acurite.configs.treesitter")
+require("acurite.configs.markdown")
 require("acurite.configs.conform")
 require("acurite.configs.lint")
 require("acurite.configs.lualine")

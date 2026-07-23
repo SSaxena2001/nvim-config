@@ -57,9 +57,16 @@ require("blink.cmp").setup({
   },
   cmdline = {
     enabled = true,
+    -- The cmdline preset keeps command-line completion close to Vim defaults:
+    -- <Tab> opens/inserts completion and cycles, <S-Tab> cycles backwards.
     keymap = { preset = "cmdline" },
+    sources = { default = { "cmdline", "buffer" } },
     completion = {
-      menu = { auto_show = true },
+      menu = {
+        -- Do not pop up while typing; press <Tab> to request suggestions.
+        auto_show = false,
+      },
+      ghost_text = { enabled = true },
     },
   },
   appearance = {

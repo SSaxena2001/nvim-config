@@ -38,6 +38,27 @@ vim.diagnostic.config({
   },
 })
 
+vim.keymap.set("n", "<leader>cl", function()
+  Snacks.picker.lsp_config()
+end, { desc = "LSP Info" })
+
+vim.api.nvim_create_user_command("LspClients", function()
+  local clients = vim.lsp.get_clients({ bufnr = 0 })
+  if #clients == 0 then
+    vim.notify("No LSP clients attached to current buffer", vim.log.levels.WARN)
+    return
+  end
+
+  local lines = vim
+    .iter(clients)
+    :map(function(client)
+      return string.format("%s  root=%s", client.name, client.root_dir or "")
+    end)
+    :totable()
+
+  vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO, { title = "Attached LSP clients" })
+end, { desc = "Show LSP clients attached to current buffer" })
+
 vim.keymap.set("n", "gd", vim.lsp.buf.definition, { desc = "Goto Definition" })
 
 vim.keymap.set("n", "gt", function()
@@ -189,11 +210,11 @@ vim.lsp.config("ts_ls", {
     "typescript",
     "typescriptreact",
   },
-  single_file_support = false,
   root_dir = function(bufnr, on_dir)
-    -- Prefer one TS server at the package-manager root for monorepos. Falling
-    -- back to every nested package.json/tsconfig can spawn many tsserver node
-    -- processes and quickly consume several GB of RAM.
+    -- Native Nvim LSP requires root_dir() to call on_dir(); otherwise the
+    -- server is skipped for that buffer. Prefer package-manager roots first so
+    -- monorepos reuse one TS server, then fall back to TS/JS project markers,
+    -- then to the file's directory for standalone .ts/.tsx files.
     local root = root_with_markers(bufnr, {
       "package-lock.json",
       "yarn.lock",
@@ -204,10 +225,15 @@ vim.lsp.config("ts_ls", {
       "tsconfig.json",
       "jsconfig.json",
       "package.json",
+      ".git",
     })
-    if root then
-      on_dir(root)
+
+    if not root then
+      local fname = vim.api.nvim_buf_get_name(bufnr)
+      root = fname ~= "" and vim.fs.dirname(fname) or vim.fn.getcwd()
     end
+
+    on_dir(root)
   end,
   init_options = {
     preferences = {
@@ -426,18 +452,75 @@ vim.lsp.config("gopls", {
   },
 })
 
+local function clangd_query_driver_arg()
+  -- clangd needs permission to query compiler drivers for their system include
+  -- paths. This is especially important on macOS and for libstdc++/libc++
+  -- headers such as <vector>, <iostream>, etc.
+  local candidates = {
+    vim.fn.exepath("clang"),
+    vim.fn.exepath("clang++"),
+    vim.fn.exepath("gcc"),
+    vim.fn.exepath("g++"),
+    vim.fn.exepath("cc"),
+    vim.fn.exepath("c++"),
+    "/usr/bin/clang",
+    "/usr/bin/clang++",
+    "/usr/bin/gcc",
+    "/usr/bin/g++",
+    "/opt/homebrew/bin/gcc-*",
+    "/opt/homebrew/bin/g++-*",
+    "/usr/local/bin/gcc-*",
+    "/usr/local/bin/g++-*",
+  }
+
+  local drivers = {}
+  for _, candidate in ipairs(candidates) do
+    if candidate and candidate ~= "" then
+      if candidate:find("*", 1, true) then
+        for _, match in ipairs(vim.fn.glob(candidate, false, true)) do
+          table.insert(drivers, match)
+        end
+      else
+        table.insert(drivers, candidate)
+      end
+    end
+  end
+
+  table.sort(drivers)
+  return "--query-driver=" .. table.concat(vim.fn.uniq(drivers), ",")
+end
+
 vim.lsp.config("clangd", {
-  cmd = { "clangd", "--background-index", "--clang-tidy", "--completion-style=detailed", "--header-insertion=iwyu" },
-  filetypes = { "c", "cpp", "objc", "objcpp", "cuda" },
-  root_markers = {
-    ".clangd",
-    ".clang-tidy",
-    ".clang-format",
-    "compile_commands.json",
-    "compile_flags.txt",
-    "configure.ac",
-    ".git",
+  cmd = {
+    "clangd",
+    "--background-index",
+    "--clang-tidy",
+    "--completion-style=detailed",
+    "--header-insertion=iwyu",
+    "--enable-config",
+    clangd_query_driver_arg(),
   },
+  filetypes = { "c", "cpp", "objc", "objcpp", "cuda" },
+  root_dir = function(bufnr, on_dir)
+    local root = root_with_markers(bufnr, {
+      ".clangd",
+      ".clang-tidy",
+      ".clang-format",
+      "compile_commands.json",
+      "compile_flags.txt",
+      "configure.ac",
+      "CMakeLists.txt",
+      "Makefile",
+      ".git",
+    })
+
+    if not root then
+      local fname = vim.api.nvim_buf_get_name(bufnr)
+      root = fname ~= "" and vim.fs.dirname(fname) or vim.fn.getcwd()
+    end
+
+    on_dir(root)
+  end,
   capabilities = vim.tbl_deep_extend("force", capabilities, {
     textDocument = {
       completion = {
