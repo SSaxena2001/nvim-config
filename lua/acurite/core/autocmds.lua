@@ -3,7 +3,6 @@ vim.api.nvim_create_autocmd("InsertLeave", {
   command = "set nopaste",
 })
 
-
 vim.api.nvim_create_autocmd("FileType", {
   pattern = { "json", "jsonc", "markdown" },
   callback = function()
@@ -19,15 +18,20 @@ vim.api.nvim_create_autocmd("FileType", {
 
 vim.api.nvim_create_autocmd({ "WinEnter", "BufWinEnter" }, {
   callback = function(args)
-    local win = vim.api.nvim_get_current_win()
-    local config = vim.api.nvim_win_get_config(win)
+    local floating = vim.api.nvim_win_get_config(vim.api.nvim_get_current_win()).relative ~= ""
 
-    if config.relative == "" then
+    if not floating then
+      -- The buffer may still carry the mapping from an earlier float (zen-mode
+      -- and picker previews both show real buffers in floating windows). Drop
+      -- it, or `q` silently stops recording macros in a normal window.
+      pcall(vim.keymap.del, "n", "q", { buffer = args.buf })
       return
     end
 
     vim.keymap.set("n", "q", function()
-      pcall(vim.api.nvim_win_close, win, true)
+      -- Resolve the window at press time; the captured handle would be stale
+      -- if this buffer is shown in a different float later.
+      pcall(vim.api.nvim_win_close, vim.api.nvim_get_current_win(), true)
     end, { buffer = args.buf, nowait = true, silent = true, desc = "Close floating window" })
   end,
 })

@@ -94,8 +94,6 @@ snacks.setup({
   },
 })
 
-local picker = Snacks.picker
-
 _G.AcuriteCommandLine = _G.AcuriteCommandLine or {}
 
 function _G.AcuriteCommandLine.complete(findstart, base)
@@ -214,49 +212,7 @@ local function command_input()
   vim.cmd.startinsert({ bang = true })
 end
 
+-- Kept here rather than in core/keymaps/: both target the local command_input
+-- helper defined above.
 vim.keymap.set({ "n", "x" }, ":", command_input, { desc = "Centered command prompt" })
 vim.keymap.set({ "n", "x" }, "<leader>:", command_input, { desc = "Centered command prompt" })
-
-vim.keymap.set("n", "<leader>fP", function()
-  picker.files({ cwd = vim.fn.stdpath("config"), hidden = true, ignored = false })
-end, { desc = "Find config file" })
-
-vim.keymap.set("n", ";f", function()
-  picker.files({ hidden = true, ignored = false })
-end, { desc = "Find files" })
-
-vim.keymap.set("n", ";r", function()
-  picker.grep({ hidden = false, ignored = false, need_search = true, limit_live = 5000 })
-end, { desc = "Live grep" })
-
-vim.keymap.set({ "n", "x" }, ";w", function()
-  picker.grep_word({ hidden = false, ignored = false, limit_live = 5000 })
-end, { desc = "Grep word or selection" })
-
-vim.keymap.set("n", "\\", function()
-  picker.buffers()
-end, { desc = "Buffers" })
-
-vim.keymap.set("n", ";t", function()
-  picker.help()
-end, { desc = "Help tags" })
-
-vim.keymap.set("n", ";;", function()
-  picker.resume()
-end, { desc = "Resume picker" })
-
-vim.keymap.set("n", ";e", function()
-  picker.diagnostics()
-end, { desc = "Diagnostics" })
-
-vim.keymap.set("n", ";s", function()
-  picker.lsp_symbols()
-end, { desc = "Document symbols" })
-
-vim.keymap.set("n", "<leader>e", function()
-  Snacks.explorer()
-end, { desc = "File explorer" })
-
-vim.keymap.set("n", "sf", function()
-  Snacks.explorer({ cwd = vim.fn.expand("%:p:h") })
-end, { desc = "File explorer at buffer path" })

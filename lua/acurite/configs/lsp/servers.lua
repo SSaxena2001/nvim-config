@@ -1,121 +1,11 @@
-local signs = {
-  ERROR = "",
-  HINT = "",
-  WARN = "",
-  INFO = "",
-}
+-- Per-server configuration. Every server is declared here with
+-- `vim.lsp.config`; the enable list lives in configs/lsp/init.lua.
+local util = require("acurite.configs.lsp.util")
+local capabilities = require("acurite.configs.lsp.capabilities")
 
-local severity_signs = {
-  [vim.diagnostic.severity.ERROR] = signs.ERROR,
-  [vim.diagnostic.severity.WARN] = signs.WARN,
-  [vim.diagnostic.severity.INFO] = signs.INFO,
-  [vim.diagnostic.severity.HINT] = signs.HINT,
-}
-
--- toggle for virtual text
-vim.keymap.set("n", "<leader>lx", function()
-  local current = vim.diagnostic.config().virtual_text
-  vim.diagnostic.config({ virtual_text = not current })
-end, { desc = "Toggle LSP virtual text" })
-
-vim.diagnostic.config({
-  signs = { text = severity_signs },
-  float = {
-    border = "rounded",
-    style = "minimal",
-    focusable = false,
-    source = true,
-  },
-  underline = true,
-  update_in_insert = false,
-  severity_sort = true,
-  virtual_text = {
-    spacing = 4,
-    source = "if_many",
-    prefix = function(diagnostic)
-      return severity_signs[diagnostic.severity] or "●"
-    end,
-  },
-})
-
-vim.keymap.set("n", "<leader>cl", function()
-  Snacks.picker.lsp_config()
-end, { desc = "LSP Info" })
-
-vim.api.nvim_create_user_command("LspClients", function()
-  local clients = vim.lsp.get_clients({ bufnr = 0 })
-  if #clients == 0 then
-    vim.notify("No LSP clients attached to current buffer", vim.log.levels.WARN)
-    return
-  end
-
-  local lines = vim
-    .iter(clients)
-    :map(function(client)
-      return string.format("%s  root=%s", client.name, client.root_dir or "")
-    end)
-    :totable()
-
-  vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO, { title = "Attached LSP clients" })
-end, { desc = "Show LSP clients attached to current buffer" })
-
-vim.keymap.set("n", "gd", vim.lsp.buf.definition, { desc = "Goto Definition" })
-
-vim.keymap.set("n", "gt", function()
-  vim.cmd("tab split")
-  vim.lsp.buf.definition()
-end, { desc = "Goto Definition in New Tab" })
-
-local capabilities = vim.lsp.protocol.make_client_capabilities()
--- blink cmp
-capabilities = require("blink.cmp").get_lsp_capabilities(capabilities)
-
-vim.lsp.config("*", {
-  capabilities = capabilities,
-  flags = {
-    -- Reduce didChange traffic to language servers while typing.
-    debounce_text_changes = 250,
-  },
-})
-
-local function root_with_markers(bufnr, markers)
-  return vim.fs.root(bufnr, markers)
-end
-
-local function package_json_has_field(path, field)
-  local ok, lines = pcall(vim.fn.readfile, path)
-  if not ok then
-    return false
-  end
-
-  local ok_json, decoded = pcall(vim.json.decode, table.concat(lines, "\n"))
-  return ok_json and type(decoded) == "table" and decoded[field] ~= nil
-end
-
-local function root_with_package_field(bufnr, markers, package_field)
-  local fname = vim.api.nvim_buf_get_name(bufnr)
-  local found = vim.fs.find(markers, { path = fname, upward = true })[1]
-  if found then
-    return vim.fs.dirname(found)
-  end
-
-  local package_json = vim.fs.find("package.json", { path = fname, upward = true })[1]
-  if package_json and package_json_has_field(package_json, package_field) then
-    return vim.fs.dirname(package_json)
-  end
-
-  return nil
-end
-
-local function disable_semantic_tokens(client)
-  -- Treesitter already handles syntax highlighting. Disabling semantic tokens
-  -- avoids extra per-buffer LSP work, especially noticeable in large TS/JS projects.
-  client.server_capabilities.semanticTokensProvider = nil
-end
-
-local function on_attach_disable_semantic_tokens(client)
-  disable_semantic_tokens(client)
-end
+local package_json_has_field = util.package_json_has_field
+local root_with_package_field = util.root_with_package_field
+local on_attach_disable_semantic_tokens = util.on_attach_disable_semantic_tokens
 
 local function clangd_switch_source_header(bufnr, client)
   local method = "textDocument/switchSourceHeader"
@@ -129,7 +19,8 @@ local function clangd_switch_source_header(bufnr, client)
       vim.notify(tostring(err), vim.log.levels.ERROR)
       return
     end
-    if not result then
+    -- JSON null decodes to vim.NIL, which is truthy; test it explicitly.
+    if result == nil or result == vim.NIL then
       vim.notify("No corresponding source/header found", vim.log.levels.INFO)
       return
     end
@@ -146,7 +37,7 @@ local function clangd_symbol_info(bufnr, client)
 
   local params = vim.lsp.util.make_position_params(vim.api.nvim_get_current_win(), client.offset_encoding)
   client:request(method, params, function(err, result)
-    if err or not result or vim.tbl_isempty(result) then
+    if err or result == nil or result == vim.NIL or vim.tbl_isempty(result) then
       return
     end
 
@@ -215,13 +106,13 @@ vim.lsp.config("ts_ls", {
     -- server is skipped for that buffer. Prefer package-manager roots first so
     -- monorepos reuse one TS server, then fall back to TS/JS project markers,
     -- then to the file's directory for standalone .ts/.tsx files.
-    local root = root_with_markers(bufnr, {
+    local root = vim.fs.root(bufnr, {
       "package-lock.json",
       "yarn.lock",
       "pnpm-lock.yaml",
       "bun.lockb",
       "bun.lock",
-    }) or root_with_markers(bufnr, {
+    }) or vim.fs.root(bufnr, {
       "tsconfig.json",
       "jsconfig.json",
       "package.json",
@@ -265,7 +156,15 @@ vim.lsp.config("ts_ls", {
 vim.lsp.config("pyright", {
   cmd = { "pyright-langserver", "--stdio" },
   filetypes = { "python" },
-  root_markers = { "pyproject.toml", "setup.py", "setup.cfg", "requirements.txt", "Pipfile", "pyrightconfig.json", ".git" },
+  root_markers = {
+    "pyproject.toml",
+    "setup.py",
+    "setup.cfg",
+    "requirements.txt",
+    "Pipfile",
+    "pyrightconfig.json",
+    ".git",
+  },
   on_attach = on_attach_disable_semantic_tokens,
   settings = {
     python = {
@@ -339,7 +238,7 @@ vim.lsp.config("eslint", {
       return
     end
 
-    local project_root = root_with_markers(bufnr, {
+    local project_root = vim.fs.root(bufnr, {
       "package-lock.json",
       "yarn.lock",
       "pnpm-lock.yaml",
@@ -401,13 +300,13 @@ vim.lsp.config("eslint", {
   },
   handlers = {
     ["eslint/openDoc"] = function(_, result)
-      if result then
+      if result ~= nil and result ~= vim.NIL then
         vim.ui.open(result.url)
       end
       return {}
     end,
     ["eslint/confirmESLintExecution"] = function(_, result)
-      if not result then
+      if result == nil or result == vim.NIL then
         return
       end
       return 4
@@ -502,7 +401,7 @@ vim.lsp.config("clangd", {
   },
   filetypes = { "c", "cpp", "objc", "objcpp", "cuda" },
   root_dir = function(bufnr, on_dir)
-    local root = root_with_markers(bufnr, {
+    local root = vim.fs.root(bufnr, {
       ".clangd",
       ".clang-tidy",
       ".clang-format",
@@ -551,11 +450,14 @@ vim.lsp.config("clangd", {
       clangd_symbol_info(bufnr, client)
     end, { desc = "Show clangd symbol info" })
 
-    vim.keymap.set("n", "<leader>ch", function()
+    -- Buffer-local, so these stay with the server rather than moving to
+    -- core/keymaps/. Under the <leader>l LSP group; <leader>c is the
+    -- blackhole-change operator.
+    vim.keymap.set("n", "<leader>lh", function()
       clangd_switch_source_header(bufnr, client)
     end, { buffer = bufnr, desc = "Switch C/C++ source/header" })
 
-    vim.keymap.set("n", "<leader>ci", function()
+    vim.keymap.set("n", "<leader>li", function()
       clangd_symbol_info(bufnr, client)
     end, { buffer = bufnr, desc = "C/C++ symbol info" })
   end,
@@ -578,7 +480,6 @@ vim.lsp.config("cssls", {
   cmd = { "vscode-css-language-server", "--stdio" },
   filetypes = { "css", "scss", "less" },
   init_options = { provideFormatter = true },
-  single_file_support = true,
   settings = {
     css = {
       lint = {
@@ -654,25 +555,4 @@ vim.lsp.config("astro", {
       tsdk = vim.fn.stdpath("data") .. "/mason/packages/typescript-language-server/node_modules/typescript/lib",
     },
   },
-})
-
--- Instead of using mason enable all configured LSP via `automatic_enable=true`
--- Prefer more control by enable manual server call below via vim.lsp.enable("")
--- mason config: lua/acurite/configs/mason.lua
-vim.lsp.enable({
-  "lua_ls",
-  "cssls",
-  "html",
-  "emmet_ls",
-  "ts_ls",
-  "eslint",
-  "biome",
-  "pyright",
-  "ruff",
-  "gopls",
-  "clangd",
-  "rust_analyzer",
-  "astro",
-  "tailwindcss",
-  "marksman",
 })

@@ -1,24 +1,40 @@
-require("solarized-osaka").setup({
-  transparent = true,
-  terminal_colors = true,
-  bold = false,
-  italic = false,
+require("rose-pine").setup({
+  variant = "main",
+  dark_variant = "main",
+
+  -- Keep the terminal background visible, matching the previous setup. This
+  -- also covers floats and sidebars, which rose-pine handles through the same
+  -- transparency flag rather than per-area options.
   styles = {
-    keywords = { italic = true },
-    constants = { italic = false, bold = true },
-    functions = {},
-    comments = { italic = false },
-    sidebars = "transparent",
-    floats = "transparent",
+    transparency = true,
+    bold = false,
+    italic = false,
   },
-  lualine_bold = true,
-  sidebars = { "qf", "vista_kind", "terminal", "packer", "fzf" },
-  on_highlights = function(hl, c)
-    hl["DiagnosticVirtualTextError"] = { bg = "none", fg = c.red }
-    hl["DiagnosticVirtualTextWarn"] = { bg = "none", fg = c.yellow }
-    hl["DiagnosticVirtualTextInfo"] = { bg = "none", fg = c.blue }
-    hl["DiagnosticVirtualTextHint"] = { bg = "none", fg = c.cyan500 }
-  end,
+
+  extend_background_behind_borders = true,
+
+  enable = {
+    terminal = true,
+    legacy_highlights = true,
+    migrations = true,
+  },
+
+  -- rose-pine has no per-token `styles` table, so the italic/bold choices that
+  -- used to live there are expressed as highlight overrides. Groups are merged
+  -- with the defaults unless `inherit = false` is set.
+  highlight_groups = {
+    Keyword = { italic = true },
+    ["@keyword"] = { italic = true },
+    Constant = { italic = false, bold = true },
+    ["@constant"] = { italic = false, bold = true },
+    Comment = { italic = false },
+    ["@comment"] = { italic = false },
+
+    DiagnosticVirtualTextError = { bg = "none", fg = "love" },
+    DiagnosticVirtualTextWarn = { bg = "none", fg = "gold" },
+    DiagnosticVirtualTextInfo = { bg = "none", fg = "foam" },
+    DiagnosticVirtualTextHint = { bg = "none", fg = "iris" },
+  },
 })
 
-vim.cmd.colorscheme("solarized-osaka")
+vim.cmd.colorscheme("rose-pine")

@@ -34,7 +34,10 @@ local TreeSitter = require("nvim-treesitter")
 vim.treesitter.language.register("tsx", "typescriptreact")
 vim.treesitter.language.register("typescript", "typescript")
 vim.treesitter.language.register("javascript", "javascript")
-vim.treesitter.language.register("jsx", "javascriptreact")
+-- JSX is parsed by the `javascript` grammar; there is no installed `jsx`
+-- parser and it is not in ensure_installed, so naming it here would leave
+-- .jsx files with no Treesitter highlighting at all.
+vim.treesitter.language.register("javascript", "javascriptreact")
 
 local ensure_lookup = {}
 for _, lang in ipairs(ensure_installed) do
@@ -162,8 +165,6 @@ require("treesitter-context").setup({
   separator = nil,
 })
 
-vim.keymap.set("n", "<leader>tc", "<cmd>TSContext toggle<cr>", { desc = "Toggle Treesitter context" })
-
 require("nvim-treesitter-textobjects").setup({
   select = {
     lookahead = true,
@@ -178,74 +179,6 @@ require("nvim-treesitter-textobjects").setup({
     set_jumps = true,
   },
 })
-
-local ts_select = require("nvim-treesitter-textobjects.select")
-local ts_move = require("nvim-treesitter-textobjects.move")
-local ts_swap = require("nvim-treesitter-textobjects.swap")
-
-vim.keymap.set({ "x", "o" }, "af", function()
-  ts_select.select_textobject("@function.outer", "textobjects")
-end, { desc = "Select outer function" })
-
-vim.keymap.set({ "x", "o" }, "if", function()
-  ts_select.select_textobject("@function.inner", "textobjects")
-end, { desc = "Select inner function" })
-
-vim.keymap.set({ "x", "o" }, "ac", function()
-  ts_select.select_textobject("@class.outer", "textobjects")
-end, { desc = "Select outer class" })
-
-vim.keymap.set({ "x", "o" }, "ic", function()
-  ts_select.select_textobject("@class.inner", "textobjects")
-end, { desc = "Select inner class" })
-
-vim.keymap.set({ "x", "o" }, "aa", function()
-  ts_select.select_textobject("@parameter.outer", "textobjects")
-end, { desc = "Select outer argument/parameter" })
-
-vim.keymap.set({ "x", "o" }, "ia", function()
-  ts_select.select_textobject("@parameter.inner", "textobjects")
-end, { desc = "Select inner argument/parameter" })
-
-vim.keymap.set("n", "<leader>a", function()
-  ts_swap.swap_next("@parameter.inner")
-end, { desc = "Swap with next argument/parameter" })
-
-vim.keymap.set("n", "<leader>A", function()
-  ts_swap.swap_previous("@parameter.outer")
-end, { desc = "Swap with previous argument/parameter" })
-
-vim.keymap.set({ "n", "x", "o" }, "]m", function()
-  ts_move.goto_next_start("@function.outer", "textobjects")
-end, { desc = "Next function start" })
-
-vim.keymap.set({ "n", "x", "o" }, "[m", function()
-  ts_move.goto_previous_start("@function.outer", "textobjects")
-end, { desc = "Previous function start" })
-
-vim.keymap.set({ "n", "x", "o" }, "]M", function()
-  ts_move.goto_next_end("@function.outer", "textobjects")
-end, { desc = "Next function end" })
-
-vim.keymap.set({ "n", "x", "o" }, "[M", function()
-  ts_move.goto_previous_end("@function.outer", "textobjects")
-end, { desc = "Previous function end" })
-
-vim.keymap.set({ "n", "x", "o" }, "]]", function()
-  ts_move.goto_next_start("@class.outer", "textobjects")
-end, { desc = "Next class start" })
-
-vim.keymap.set({ "n", "x", "o" }, "[[", function()
-  ts_move.goto_previous_start("@class.outer", "textobjects")
-end, { desc = "Previous class start" })
-
-vim.keymap.set({ "n", "x", "o" }, "][", function()
-  ts_move.goto_next_end("@class.outer", "textobjects")
-end, { desc = "Next class end" })
-
-vim.keymap.set({ "n", "x", "o" }, "[]", function()
-  ts_move.goto_previous_end("@class.outer", "textobjects")
-end, { desc = "Previous class end" })
 
 require("nvim-ts-autotag").setup({
   opts = {

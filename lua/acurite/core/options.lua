@@ -66,6 +66,10 @@ vim.opt.wildignore:append({ "*/node_modules/*", "*/.git/*", "*/dist/*", "*/build
 vim.opt.scrolloff = 8
 vim.opt.signcolumn = "yes"
 
+-- Long lines run off the right edge instead of wrapping onto the next row, so
+-- line numbers stay aligned with actual lines.
+vim.opt.wrap = false
+
 -- folding
 vim.o.foldenable = true
 vim.o.foldmethod = "manual"
@@ -81,7 +85,7 @@ vim.opt.shell = "fish"
 
 -- misc
 vim.opt.isfname:append("@-@")
-vim.opt.colorcolumn = "0"
+vim.opt.colorcolumn = "80"
 vim.opt.clipboard:append("unnamedplus")
 vim.opt.backupskip = { "/tmp/*", "/private/tmp/*" }
 vim.opt.mouse = ""

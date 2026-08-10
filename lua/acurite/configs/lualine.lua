@@ -12,12 +12,12 @@ local function lsp_clients()
     :totable()
 
   table.sort(names)
-  return " " .. table.concat(names, ",")
+  return table.concat(names, ",")
 end
 
 require("lualine").setup({
   options = {
-    theme = "solarized-osaka",
+    theme = "rose-pine",
   },
   sections = {
     lualine_c = {

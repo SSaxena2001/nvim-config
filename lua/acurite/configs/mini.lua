@@ -41,7 +41,7 @@ notify.setup({
 
       if notif.data and notif.data.source == "lsp_progress" then
         local client = notif.data.client_name and (notif.data.client_name .. " ") or ""
-        return string.format(" %s%s", client, msg)
+        return string.format("%s%s", client, msg)
       end
 
       local icon = level_icons[notif.level] or ""
@@ -98,3 +98,13 @@ require("mini.cmdline").setup({
 })
 require("mini.pairs").setup()
 require("mini.surround").setup()
+
+-- Git diff markers in the sign column. The LSP diagnostic signs are disabled
+-- (see configs/lsp/diagnostics.lua) so these are the only signs competing for the
+-- gutter.
+require("mini.diff").setup({
+  view = {
+    style = "sign",
+    signs = { add = "+", change = "~", delete = "-" },
+  },
+})

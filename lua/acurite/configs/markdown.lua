@@ -21,7 +21,3 @@ render_markdown.setup({
     lsp = { enabled = false },
   },
 })
-
-vim.keymap.set("n", "<leader>mr", function()
-  render_markdown.toggle()
-end, { desc = "Toggle markdown render" })
