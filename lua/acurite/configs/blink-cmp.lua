@@ -8,11 +8,6 @@ require("blink.cmp").setup({
   sources = {
     default = { "lsp", "path", "snippets", "buffer" },
     providers = {
-      vsnip = {
-        name = "vsnip",
-        module = "blink-cmp-vsnip",
-        opts = {},
-      },
       lsp = {
         opts = {
           tailwind_color_icon = "󱓻",

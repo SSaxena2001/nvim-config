@@ -222,14 +222,24 @@ end
 -- eslint
 vim.lsp.config("eslint", {
   cmd = function(dispatchers, config)
-    local cmd = "vscode-eslint-language-server"
+    local argv = { "vscode-eslint-language-server", "--stdio" }
+
     if config and config.root_dir then
-      local local_cmd = vim.fs.joinpath(config.root_dir, "node_modules/.bin", cmd)
+      local local_cmd = vim.fs.joinpath(config.root_dir, "node_modules/.bin", argv[1])
       if vim.fn.executable(local_cmd) == 1 then
-        cmd = local_cmd
+        argv[1] = local_cmd
+      end
+
+      -- Yarn PnP has no node_modules layout, so the server can only resolve
+      -- eslint when launched through `yarn exec`. This has to happen here:
+      -- before_init runs after the process is already spawned, so rewriting
+      -- config.cmd there is too late to matter.
+      if vim.uv.fs_stat(config.root_dir .. "/.pnp.cjs") or vim.uv.fs_stat(config.root_dir .. "/.pnp.js") then
+        argv = vim.list_extend({ "yarn", "exec" }, argv)
       end
     end
-    return vim.lsp.rpc.start({ cmd, "--stdio" }, dispatchers)
+
+    return vim.lsp.rpc.start(argv, dispatchers)
   end,
   filetypes = { "javascript", "javascriptreact", "typescript", "typescriptreact", "vue", "svelte", "astro" },
   workspace_required = true,
@@ -262,12 +272,6 @@ vim.lsp.config("eslint", {
       uri = vim.uri_from_fname(root_dir),
       name = vim.fn.fnamemodify(root_dir, ":t"),
     }
-
-    local pnp_cjs = root_dir .. "/.pnp.cjs"
-    local pnp_js = root_dir .. "/.pnp.js"
-    if type(config.cmd) == "table" and (vim.uv.fs_stat(pnp_cjs) or vim.uv.fs_stat(pnp_js)) then
-      config.cmd = vim.list_extend({ "yarn", "exec" }, config.cmd)
-    end
   end,
   settings = {
     validate = "on",

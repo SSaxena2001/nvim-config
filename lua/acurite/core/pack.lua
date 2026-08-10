@@ -15,7 +15,6 @@ vim.pack.add({
   "https://github.com/saghen/blink.lib",
   "https://github.com/saghen/blink.cmp",
   "https://github.com/hrsh7th/vim-vsnip",
-  "https://codeberg.org/FelipeLema/blink-cmp-vsnip",
 
   -- mason prepends its bin directory to PATH. The LSP servers enabled below
   -- are resolved by name, so this cannot be deferred without breaking them.
@@ -65,7 +64,7 @@ require("acurite.configs.snacks")
 -- Command-triggered
 lazy.on_command("Trouble", "trouble.nvim", "acurite.configs.trouble")
 lazy.on_command("ZenMode", "zen-mode.nvim", "acurite.configs.zen-mode")
-lazy.on_command("Atone", "atone.nvim")
+lazy.on_command("Atone", "atone.nvim", "acurite.configs.atone")
 lazy.on_command("Leet", { "nui.nvim", "leetcode.nvim" }, "acurite.configs.leetcode")
 
 -- Event-triggered

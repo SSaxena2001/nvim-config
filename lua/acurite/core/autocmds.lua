@@ -24,7 +24,14 @@ vim.api.nvim_create_autocmd({ "WinEnter", "BufWinEnter" }, {
       -- The buffer may still carry the mapping from an earlier float (zen-mode
       -- and picker previews both show real buffers in floating windows). Drop
       -- it, or `q` silently stops recording macros in a normal window.
-      pcall(vim.keymap.del, "n", "q", { buffer = args.buf })
+      --
+      -- Only ever delete a mapping this autocmd installed: help, qf, man and
+      -- checkhealth ftplugins bind buffer-local `q` to close the window, and
+      -- an unconditional delete would silently break all of them.
+      if vim.b[args.buf].acurite_float_q then
+        pcall(vim.keymap.del, "n", "q", { buffer = args.buf })
+        vim.b[args.buf].acurite_float_q = nil
+      end
       return
     end
 
@@ -33,6 +40,7 @@ vim.api.nvim_create_autocmd({ "WinEnter", "BufWinEnter" }, {
       -- if this buffer is shown in a different float later.
       pcall(vim.api.nvim_win_close, vim.api.nvim_get_current_win(), true)
     end, { buffer = args.buf, nowait = true, silent = true, desc = "Close floating window" })
+    vim.b[args.buf].acurite_float_q = true
   end,
 })
 

@@ -43,9 +43,13 @@ end, { desc = "Toggle inlay hints" })
 -- gd / gt are buffer-local and live in configs/lsp/attach.lua so Vim's own
 -- gd and gt keep working where no server is attached.
 
+-- Capture the configured table once. `not current` would collapse it to a
+-- bare boolean and lose spacing/source/prefix from the second press onward.
+local virtual_text_opts = vim.diagnostic.config().virtual_text
+
 keymap.set("n", "<leader>lx", function()
   local current = vim.diagnostic.config().virtual_text
-  vim.diagnostic.config({ virtual_text = not current })
+  vim.diagnostic.config({ virtual_text = current and false or virtual_text_opts })
 end, { desc = "Toggle LSP virtual text" })
 
 keymap.set("n", "<leader>lc", function()

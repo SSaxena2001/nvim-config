@@ -26,7 +26,7 @@ keymap.set("n", "<leader>a", function()
 end, { desc = "Swap with next argument/parameter" })
 
 keymap.set("n", "<leader>A", function()
-  require("nvim-treesitter-textobjects.swap").swap_previous("@parameter.outer")
+  require("nvim-treesitter-textobjects.swap").swap_previous("@parameter.inner")
 end, { desc = "Swap with previous argument/parameter" })
 
 keymap.set({ "n", "x", "o" }, "]m", move("goto_next_start", "@function.outer"), { desc = "Next function start" })

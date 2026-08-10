@@ -4,10 +4,6 @@
       "rev": "bfe863e0499fcb47827aa7be1d2d734b8395c4c7",
       "src": "https://github.com/XXiaoA/atone.nvim"
     },
-    "blink-cmp-vsnip": {
-      "rev": "eec95fac337360fcb75e10a9c448ddf1a4515e33",
-      "src": "https://codeberg.org/FelipeLema/blink-cmp-vsnip"
-    },
     "blink.cmp": {
       "rev": "bda905a4bf1b3edfa708b0be193b8c63d8620c96",
       "src": "https://github.com/saghen/blink.cmp"
