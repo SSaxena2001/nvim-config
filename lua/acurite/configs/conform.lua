@@ -1,5 +1,7 @@
-local js_formatters = { "biome", "prettierd", "prettier", stop_after_first = true }
-local prettier_formatters = { "prettierd", "prettier", stop_after_first = true }
+-- Prettier is the default formatter for everything in its ecosystem.
+-- prettierd is the same formatter behind a daemon, so it is tried first for
+-- speed and falls back to plain prettier when the daemon is unavailable.
+local prettier = { "prettierd", "prettier", stop_after_first = true }
 
 require("conform").setup({
   notify_on_error = true,
@@ -23,14 +25,21 @@ require("conform").setup({
     gomod = { "gofmt" },
     gowork = { "gofmt" },
 
-    -- JS/TS/CSS/JSON: prefer fast Biome when available, then daemonized Prettier, then Prettier.
-    javascript = js_formatters,
-    javascriptreact = js_formatters,
-    typescript = js_formatters,
-    typescriptreact = js_formatters,
-    json = js_formatters,
-    jsonc = js_formatters,
-    css = js_formatters,
+    -- JS/TS/CSS/JSON
+    javascript = prettier,
+    javascriptreact = prettier,
+    typescript = prettier,
+    typescriptreact = prettier,
+    json = prettier,
+    jsonc = prettier,
+    json5 = prettier,
+    css = prettier,
+    scss = prettier,
+    less = prettier,
+    vue = prettier,
+    -- astro is intentionally absent: core prettier has no .astro parser
+    -- (that needs prettier-plugin-astro), so format_on_save's
+    -- `lsp_format = "fallback"` hands it to astro-language-server instead.
 
     -- Python: Ruff is fast and handles fixes, imports, and formatting.
     python = { "ruff_fix", "ruff_organize_imports", "ruff_format" },
@@ -38,14 +47,14 @@ require("conform").setup({
     -- Rust
     rust = { "rustfmt", lsp_format = "fallback" },
 
-    -- Prettier ecosystem formats. prettierd is used first for speed.
-    html = prettier_formatters,
-    svelte = prettier_formatters,
-    yaml = prettier_formatters,
-    markdown = prettier_formatters,
-    ["markdown.mdx"] = prettier_formatters,
-    graphql = prettier_formatters,
-    liquid = prettier_formatters,
+    html = prettier,
+    svelte = prettier,
+    yaml = prettier,
+    markdown = prettier,
+    ["markdown.mdx"] = prettier,
+    graphql = prettier,
+    liquid = prettier,
+    handlebars = prettier,
 
     -- Shell
     sh = { "shfmt" },

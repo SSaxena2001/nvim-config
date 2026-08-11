@@ -25,7 +25,7 @@ vim.lsp.enable({
   "emmet_ls",
   "ts_ls",
   "eslint",
-  "biome",
+  "jsonls",
   "pyright",
   "ruff",
   "gopls",

@@ -326,18 +326,6 @@ vim.lsp.config("eslint", {
   },
 })
 
--- biome
-vim.lsp.config("biome", {
-  cmd = { "biome", "lsp-proxy" },
-  filetypes = { "javascript", "javascriptreact", "typescript", "typescriptreact", "json", "jsonc" },
-  root_dir = function(bufnr, on_dir)
-    local root = root_with_package_field(bufnr, { "biome.json", "biome.jsonc" }, "biome")
-    if root then
-      on_dir(root)
-    end
-  end,
-})
-
 -- gopls
 vim.lsp.config("gopls", {
   cmd = { "gopls" },
@@ -502,6 +490,23 @@ vim.lsp.config("cssls", {
         unknownAtRules = "ignore",
       },
       validate = true,
+    },
+  },
+})
+
+-- jsonls. Biome used to be the only server covering json/jsonc; this takes
+-- over its schema validation and completion now that Biome is gone.
+vim.lsp.config("jsonls", {
+  cmd = { "vscode-json-language-server", "--stdio" },
+  filetypes = { "json", "jsonc" },
+  root_markers = { ".git" },
+  -- conform (prettier) owns formatting for json/jsonc.
+  init_options = { provideFormatter = false },
+  settings = {
+    json = {
+      validate = { enable = true },
+      -- Resolve schemas declared by a file's own "$schema" key.
+      schemaDownload = { enable = true },
     },
   },
 })

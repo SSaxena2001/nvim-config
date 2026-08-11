@@ -42,7 +42,6 @@ local deferred = {
   ["atone.nvim"] = "https://github.com/XXiaoA/atone.nvim",
   ["leetcode.nvim"] = "https://github.com/kawre/leetcode.nvim",
   ["nui.nvim"] = "https://github.com/MunifTanjim/nui.nvim",
-  ["supermaven-nvim"] = "https://github.com/supermaven-inc/supermaven-nvim",
   ["render-markdown.nvim"] = "https://github.com/MeanderingProgrammer/render-markdown.nvim",
 }
 
@@ -68,8 +67,6 @@ lazy.on_command("Atone", "atone.nvim", "acurite.configs.atone")
 lazy.on_command("Leet", { "nui.nvim", "leetcode.nvim" }, "acurite.configs.leetcode")
 
 -- Event-triggered
-lazy.on_event("InsertEnter", "supermaven-nvim", "acurite.configs.supermaven")
-
 lazy.on_event("FileType", "render-markdown.nvim", "acurite.configs.markdown", {
   pattern = "markdown",
 })

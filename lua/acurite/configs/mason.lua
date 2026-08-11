@@ -23,7 +23,7 @@ MasonToolInstaller.setup({
     "css-lsp",
     "tailwindcss-language-server",
     "eslint-lsp",
-    "biome",
+    "json-lsp",
     "pyright",
     "ruff",
     "gopls",
