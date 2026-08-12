@@ -3,8 +3,6 @@
 local util = require("acurite.configs.lsp.util")
 local capabilities = require("acurite.configs.lsp.capabilities")
 
-local package_json_has_field = util.package_json_has_field
-local root_with_package_field = util.root_with_package_field
 local on_attach_disable_semantic_tokens = util.on_attach_disable_semantic_tokens
 
 local function clangd_switch_source_header(bufnr, client)
@@ -91,9 +89,9 @@ vim.lsp.config("emmet_ls", {
   },
 })
 
--- ts_ls (TypeScript/JavaScript)
-vim.lsp.config("ts_ls", {
-  cmd = { "typescript-language-server", "--stdio" },
+-- tsgo: Microsoft's native TypeScript/JavaScript language server.
+vim.lsp.config("tsgo", {
+  cmd = { "tsgo", "--lsp", "--stdio" },
   on_attach = on_attach_disable_semantic_tokens,
   filetypes = {
     "javascript",
@@ -126,30 +124,6 @@ vim.lsp.config("ts_ls", {
 
     on_dir(root)
   end,
-  init_options = {
-    preferences = {
-      includeCompletionsForModuleExports = true,
-      includeCompletionsForImportStatements = true,
-    },
-  },
-  settings = {
-    typescript = {
-      inlayHints = {
-        includeInlayParameterNameHints = "all",
-        includeInlayVariableTypeHints = true,
-        includeInlayFunctionParameterTypeHints = true,
-      },
-    },
-    javascript = {
-      validate = {
-        enable = true,
-      },
-      inlayHints = {
-        includeInlayParameterNameHints = "all",
-        includeInlayVariableTypeHints = true,
-      },
-    },
-  },
 })
 
 -- pyright
@@ -189,140 +163,6 @@ vim.lsp.config("ruff", {
   settings = {
     organizeImports = true,
     fixAll = true,
-  },
-})
-
-local eslint_config_files = {
-  ".eslintrc",
-  ".eslintrc.js",
-  ".eslintrc.cjs",
-  ".eslintrc.yaml",
-  ".eslintrc.yml",
-  ".eslintrc.json",
-  "eslint.config.js",
-  "eslint.config.mjs",
-  "eslint.config.cjs",
-  "eslint.config.ts",
-  "eslint.config.mts",
-  "eslint.config.cts",
-}
-
-local function is_buffer_using_eslint(bufnr, project_root)
-  local filename = vim.api.nvim_buf_get_name(bufnr)
-  local stop = vim.fs.dirname(project_root)
-
-  if vim.fs.find(eslint_config_files, { path = filename, type = "file", upward = true, stop = stop })[1] then
-    return true
-  end
-
-  local package_json = vim.fs.find("package.json", { path = filename, type = "file", upward = true, stop = stop })[1]
-  return package_json and package_json_has_field(package_json, "eslintConfig")
-end
-
--- eslint
-vim.lsp.config("eslint", {
-  cmd = function(dispatchers, config)
-    local argv = { "vscode-eslint-language-server", "--stdio" }
-
-    if config and config.root_dir then
-      local local_cmd = vim.fs.joinpath(config.root_dir, "node_modules/.bin", argv[1])
-      if vim.fn.executable(local_cmd) == 1 then
-        argv[1] = local_cmd
-      end
-
-      -- Yarn PnP has no node_modules layout, so the server can only resolve
-      -- eslint when launched through `yarn exec`. This has to happen here:
-      -- before_init runs after the process is already spawned, so rewriting
-      -- config.cmd there is too late to matter.
-      if vim.uv.fs_stat(config.root_dir .. "/.pnp.cjs") or vim.uv.fs_stat(config.root_dir .. "/.pnp.js") then
-        argv = vim.list_extend({ "yarn", "exec" }, argv)
-      end
-    end
-
-    return vim.lsp.rpc.start(argv, dispatchers)
-  end,
-  filetypes = { "javascript", "javascriptreact", "typescript", "typescriptreact", "vue", "svelte", "astro" },
-  workspace_required = true,
-  root_dir = function(bufnr, on_dir)
-    if vim.fs.root(bufnr, { "deno.json", "deno.jsonc", "deno.lock" }) then
-      return
-    end
-
-    local project_root = vim.fs.root(bufnr, {
-      "package-lock.json",
-      "yarn.lock",
-      "pnpm-lock.yaml",
-      "bun.lockb",
-      "bun.lock",
-      ".git",
-    }) or vim.fn.getcwd()
-
-    if is_buffer_using_eslint(bufnr, project_root) then
-      on_dir(project_root)
-    end
-  end,
-  before_init = function(_, config)
-    local root_dir = config.root_dir
-    if not root_dir then
-      return
-    end
-
-    config.settings = config.settings or {}
-    config.settings.workspaceFolder = {
-      uri = vim.uri_from_fname(root_dir),
-      name = vim.fn.fnamemodify(root_dir, ":t"),
-    }
-  end,
-  settings = {
-    validate = "on",
-    packageManager = nil,
-    useESLintClass = false,
-    experimental = {},
-    format = false,
-    quiet = false,
-    onIgnoredFiles = "off",
-    rulesCustomizations = {},
-    run = "onType",
-    problems = {
-      shortenToSingleLine = false,
-    },
-    nodePath = "",
-    workingDirectory = { mode = "auto" },
-    codeActionOnSave = {
-      enable = false,
-      mode = "all",
-    },
-    codeAction = {
-      disableRuleComment = {
-        enable = true,
-        location = "separateLine",
-      },
-      showDocumentation = {
-        enable = true,
-      },
-    },
-  },
-  handlers = {
-    ["eslint/openDoc"] = function(_, result)
-      if result ~= nil and result ~= vim.NIL then
-        vim.ui.open(result.url)
-      end
-      return {}
-    end,
-    ["eslint/confirmESLintExecution"] = function(_, result)
-      if result == nil or result == vim.NIL then
-        return
-      end
-      return 4
-    end,
-    ["eslint/probeFailed"] = function()
-      vim.notify("ESLint probe failed", vim.log.levels.WARN)
-      return {}
-    end,
-    ["eslint/noLibrary"] = function()
-      vim.notify("Unable to find ESLint library", vim.log.levels.WARN)
-      return {}
-    end,
   },
 })
 
@@ -511,49 +351,6 @@ vim.lsp.config("jsonls", {
   },
 })
 
--- tailwind
-vim.lsp.config("tailwindcss", {
-  cmd = { "tailwindcss-language-server", "--stdio" },
-  root_dir = function(bufnr, on_dir)
-    local root = root_with_package_field(bufnr, {
-      "tailwind.config.js",
-      "tailwind.config.cjs",
-      "tailwind.config.mjs",
-      "tailwind.config.ts",
-      "postcss.config.js",
-      "postcss.config.cjs",
-      "postcss.config.mjs",
-      "postcss.config.ts",
-    }, "tailwindcss")
-    if root then
-      on_dir(root)
-    end
-  end,
-  filetypes = {
-    "html",
-    "css",
-    "javascript",
-    "typescript",
-    "javascriptreact",
-    "typescriptreact",
-    "svelte",
-    "vue",
-    "astro",
-  },
-  init_options = {
-    userLanguages = {
-      astro = "html",
-    },
-  },
-})
-
-vim.lsp.config("rust_analyzer", {
-  cmd = { "rust-analyzer" },
-  filetypes = { "rust" },
-  root_markers = { "Cargo.toml", "rust-project.json", ".git" },
-  on_attach = on_attach_disable_semantic_tokens,
-})
-
 -- astro
 vim.lsp.config("astro", {
   cmd = { "astro-ls", "--stdio" },
@@ -561,7 +358,7 @@ vim.lsp.config("astro", {
 
   init_options = {
     typescript = {
-      tsdk = vim.fn.stdpath("data") .. "/mason/packages/typescript-language-server/node_modules/typescript/lib",
+      tsdk = vim.fn.stdpath("data") .. "/mason/packages/astro-language-server/node_modules/typescript/lib",
     },
   },
 })

@@ -99,12 +99,13 @@ require("mini.cmdline").setup({
 require("mini.pairs").setup()
 require("mini.surround").setup()
 
--- Git diff markers in the sign column. The LSP diagnostic signs are disabled
--- (see configs/lsp/diagnostics.lua) so these are the only signs competing for the
--- gutter.
-require("mini.diff").setup({
-  view = {
-    style = "sign",
-    signs = { add = "+", change = "~", delete = "-" },
+local hipatterns = require("mini.hipatterns")
+hipatterns.setup({
+  delay = {
+    text_change = 100,
+    scroll = 50,
+  },
+  highlighters = {
+    hex_color = hipatterns.gen_highlighter.hex_color({ style = "full" }),
   },
 })

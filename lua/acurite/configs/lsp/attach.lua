@@ -42,6 +42,38 @@ vim.api.nvim_create_autocmd("LspAttach", {
       return client:supports_method(method)
     end
 
+    -- Neovim's native completion applies LSP text edits and expands LSP
+    -- snippets through vim.snippet. Autotrigger only on server-declared trigger
+    -- characters; <C-Space> explicitly requests completion at any point.
+    if supports("textDocument/completion") then
+      vim.lsp.completion.enable(true, client.id, ev.buf, { autotrigger = true })
+
+      map("i", "<C-Space>", vim.lsp.completion.get, "Trigger Completion")
+      map("i", "<CR>", function()
+        return vim.fn.pumvisible() == 1 and "<C-y>" or "<CR>"
+      end, "Accept Completion", { expr = true })
+      map("i", "<Tab>", function()
+        if vim.fn.pumvisible() == 1 then
+          return "<C-n>"
+        end
+        if vim.snippet.active({ direction = 1 }) then
+          vim.snippet.jump(1)
+          return ""
+        end
+        return "<Tab>"
+      end, "Next Completion or Snippet Stop", { expr = true })
+      map("i", "<S-Tab>", function()
+        if vim.fn.pumvisible() == 1 then
+          return "<C-p>"
+        end
+        if vim.snippet.active({ direction = -1 }) then
+          vim.snippet.jump(-1)
+          return ""
+        end
+        return "<S-Tab>"
+      end, "Previous Completion or Snippet Stop", { expr = true })
+    end
+
     -- Navigation ------------------------------------------------------------
     -- Buffer-local so Vim's own `gd` (go to local declaration) and `gt`
     -- (:tabnext) survive in every buffer without a language server.
@@ -81,9 +113,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
       map("n", "gD", vim.lsp.buf.declaration, "Goto Declaration")
     end
 
-    -- Insert mode is deliberately left alone: blink.cmp's "enter" preset owns
-    -- <C-k> for its signature window, and Nvim's built-in <C-s> already calls
-    -- signature_help.
+    -- Nvim's built-in insert-mode <C-s> already calls signature_help.
     if supports("textDocument/signatureHelp") then
       map("n", "gK", vim.lsp.buf.signature_help, "Signature Help")
     end
@@ -99,16 +129,16 @@ vim.api.nvim_create_autocmd("LspAttach", {
       end, "Source Action")
 
       -- TypeScript-specific kinds, mirroring LazyVim's typescript extra. The
-      -- flag stops a later client on the same buffer (eslint, tailwindcss,
-      -- emmet_ls) from overwriting these with the generic kinds below.
-      if client.name == "ts_ls" or client.name == "vtsls" then
+      -- flag stops a later client on the same buffer from overwriting these
+      -- with the generic kinds below.
+      if client.name == "tsgo" then
         vim.b[ev.buf].acurite_ts_source_actions = true
         map("n", "<leader>lo", source_action("source.organizeImports.ts"), "Organize Imports")
         map("n", "<leader>lm", source_action("source.addMissingImports.ts"), "Add Missing Imports")
         map("n", "<leader>lu", source_action("source.removeUnused.ts"), "Remove Unused Imports")
         map("n", "<leader>lF", source_action("source.fixAll.ts"), "Fix All")
       elseif not vim.b[ev.buf].acurite_ts_source_actions then
-        -- Generic "source.*" kinds. gopls, ruff and eslint implement some
+        -- Generic "source.*" kinds. gopls and ruff implement some
         -- subset; servers that do not simply report no action available.
         map("n", "<leader>lo", source_action("source.organizeImports"), "Organize Imports")
         map("n", "<leader>lF", source_action("source.fixAll"), "Fix All")
@@ -142,12 +172,6 @@ vim.api.nvim_create_autocmd("LspAttach", {
         vim.b.acurite_codelens_off = on
         vim.lsp.codelens.enable(not on, { bufnr = 0 })
       end, "Toggle Code Lens")
-    end
-
-    -- On by default in 0.12 (:h lsp-document_color). nvim-highlight-colors
-    -- already renders colours, so let it own that and avoid double-highlighting.
-    if vim.lsp.document_color and supports("textDocument/documentColor") then
-      vim.lsp.document_color.enable(false, { bufnr = ev.buf })
     end
   end,
 })

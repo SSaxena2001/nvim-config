@@ -25,7 +25,7 @@ keymap.set(
   { desc = "Buffer Diagnostics (Trouble)" }
 )
 keymap.set("n", "<leader>xL", "<cmd>Trouble loclist toggle<cr>", { desc = "Location List (Trouble)" })
-keymap.set("n", "<leader>xQ", "<cmd>Trouble qflist toggle<cr>", { desc = "Quickfix List (Trouble)" })
+keymap.set("n", "<leader>xq", "<cmd>Trouble qflist toggle<cr>", { desc = "Quickfix List (Trouble)" })
 
 -- Trouble is deferred, so it is normally not loaded when these are pressed.
 -- A failed require must fall through to the quickfix list, not error.

@@ -29,6 +29,14 @@ local ensure_installed = {
 
 local TreeSitter = require("nvim-treesitter")
 
+-- The rewritten nvim-treesitter keeps its bundled queries under runtime/.
+-- Add that directory directly so highlighting is independent of query
+-- symlinks left behind by older plugin managers.
+local treesitter_packages = vim.pack.get({ "nvim-treesitter" })
+if treesitter_packages[1] then
+  vim.opt.runtimepath:prepend(treesitter_packages[1].path .. "/runtime")
+end
+
 -- Be explicit for React/TypeScript filetypes. This makes TSX resilient across
 -- Neovim/nvim-treesitter changes and keeps the parser selection obvious.
 vim.treesitter.language.register("tsx", "typescriptreact")
@@ -112,27 +120,36 @@ vim.api.nvim_create_user_command("TSUpdateConfigured", function()
   TreeSitter.update(ensure_installed, { summary = true })
 end, { desc = "Update configured Treesitter parsers and queries" })
 
-vim.api.nvim_create_autocmd("FileType", {
-  pattern = "*",
-  callback = function(args)
-    local buf = args.buf
-    local ft = vim.bo[buf].filetype
+local treesitter_group = vim.api.nvim_create_augroup("AcuriteTreesitter", { clear = true })
 
+local function setup_buffer(buf)
+  if not vim.api.nvim_buf_is_valid(buf) then
+    return
+  end
+  local initial_ft = vim.bo[buf].filetype
+  if initial_ft == "" then
+    return
+  end
+
+  -- Loading a parser shared library can take ~180 ms on its first use. Let
+  -- Neovim draw the buffer with its syntax fallback before doing that work.
+  vim.schedule(function()
+    if not vim.api.nvim_buf_is_valid(buf) then
+      return
+    end
+
+    local ft = vim.bo[buf].filetype
     local lang = vim.treesitter.language.get_lang(ft)
     if not lang then
       return
     end
 
     if not parser_installed(lang) then
-      -- Install only on demand for configured parsers. Vim syntax highlighting
-      -- remains enabled as a fallback while the parser is missing/installing.
       install_or_update(lang, false)
       return
     end
 
     if not has_highlight_query(lang) then
-      -- Repair stale/missing query symlinks, e.g. after moving from lazy.nvim to
-      -- vim.pack. Without this, TS/TSX parsers can start but show no colors.
       install_or_update(lang, true)
       return
     end
@@ -141,20 +158,33 @@ vim.api.nvim_create_autocmd("FileType", {
       return
     end
 
-    -- start treesitter safely
-    local ok = pcall(vim.treesitter.start, buf, lang)
-    if not ok then
+    if not pcall(vim.treesitter.start, buf, lang) then
       return
     end
 
-    -- enable indentation (skip yaml/markdown)
+    -- Treesitter owns highlighting now; stop the duplicate regex syntax
+    -- engine that supplied color while the parser was loading.
+    vim.bo[buf].syntax = ""
+
     if ft ~= "yaml" and ft ~= "markdown" then
       vim.bo[buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
       vim.bo[buf].smartindent = false
       vim.bo[buf].cindent = false
     end
+  end)
+end
+
+vim.api.nvim_create_autocmd("FileType", {
+  group = treesitter_group,
+  pattern = "*",
+  callback = function(args)
+    setup_buffer(args.buf)
   end,
 })
+
+-- This module itself is loaded from a FileType callback, so configure the
+-- buffer whose original event triggered the load.
+setup_buffer(vim.api.nvim_get_current_buf())
 
 require("treesitter-context").setup({
   enable = true,

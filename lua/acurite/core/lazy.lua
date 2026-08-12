@@ -71,6 +71,28 @@ function M.on_command(cmd, names, config)
   end, { nargs = "*", bang = true, desc = "Load plugin, then run :" .. cmd })
 end
 
+--- Register a related set of commands that load one plugin together.
+--- @param commands string[]
+--- @param names string|string[]
+--- @param config string|nil
+function M.on_commands(commands, names, config)
+  for _, cmd in ipairs(commands) do
+    vim.api.nvim_create_user_command(cmd, function(args)
+      for _, stub in ipairs(commands) do
+        pcall(vim.api.nvim_del_user_command, stub)
+      end
+      M.load(names, config)
+
+      if vim.fn.exists(":" .. cmd) == 0 then
+        vim.notify(("%s did not define :%s"):format(tostring(names), cmd), vim.log.levels.ERROR)
+        return
+      end
+
+      vim.cmd(("%s%s %s"):format(cmd, args.bang and "!" or "", args.args))
+    end, { nargs = "*", bang = true, desc = "Load plugin, then run :" .. cmd })
+  end
+end
+
 --- Load the plugin the first time an event fires.
 --- @param event string|string[]
 --- @param opts table autocmd options; `config` and `names` are consumed here
@@ -81,9 +103,16 @@ function M.on_event(event, names, config, opts)
     once = true,
     desc = "Load " .. (type(names) == "table" and names[1] or names),
     callback = function()
-      M.load(names, config)
-      if opts.after then
-        opts.after()
+      local run = function()
+        M.load(names, config)
+        if opts.after then
+          opts.after()
+        end
+      end
+      if opts.defer then
+        vim.schedule(run)
+      else
+        run()
       end
     end,
   })

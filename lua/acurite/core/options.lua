@@ -94,10 +94,8 @@ vim.opt.updatetime = 250
 vim.o.winborder = "rounded"
 vim.opt.showcmd = true
 vim.opt.termguicolors = true
-vim.opt.completeopt = "menuone,noselect,fuzzy,nosort"
--- Native command-line completion fallback. blink.cmp enhances this with an
--- auto-opening popup for `:` commands, while these options keep completion nice
--- if blink is unavailable.
+vim.opt.completeopt = "menuone,noselect,fuzzy,nosort,popup"
+-- Native command-line completion.
 vim.opt.wildmenu = true
 vim.opt.wildmode = { "longest:full", "full" }
 vim.opt.shortmess:append("c")
@@ -122,6 +120,8 @@ vim.filetype.add({
     cc = "cpp",
     cpp = "cpp",
     cxx = "cpp",
+    gotmpl = "gotmpl",
+    mdx = "markdown.mdx",
   },
   filename = { Podfile = "ruby" },
 })

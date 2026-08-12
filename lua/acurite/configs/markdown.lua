@@ -17,7 +17,6 @@ render_markdown.setup({
   max_file_size = 2.0,
 
   completions = {
-    blink = { enabled = false },
     lsp = { enabled = false },
   },
 })
