@@ -1,8 +1,6 @@
--- All keymaps live under this directory, split by domain. Plugin config files
--- in configs/ hold setup() only, with two deliberate exceptions: buffer-local
--- maps created inside an LSP on_attach (configs/lsp/servers.lua) and the
--- snacks input-window maps (configs/snacks.lua), both of which need a buffer
--- handle that only exists at callback time.
+-- Most keymaps live under this directory, split by domain. Buffer-local LSP
+-- maps are created at attach time, and the centered command prompt owns its
+-- local callbacks in configs/command-input.lua.
 --
 -- Loaded from init.lua after core/pack.lua so the plugins these reference are
 -- on the runtimepath. Callbacks still require() lazily, keeping startup cheap.

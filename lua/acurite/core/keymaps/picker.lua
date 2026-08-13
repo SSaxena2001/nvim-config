@@ -1,51 +1,61 @@
--- snacks.nvim pickers and explorer. `Snacks` is the plugin's global, set by its
--- setup() in configs/snacks.lua, so these are resolved lazily inside callbacks.
 local keymap = vim.keymap
+local telescope = require("acurite.core.telescope")
 
-local function picker()
-  return require("snacks").picker
+local function project_root()
+  return vim.fs.root(0, {
+    "package-lock.json",
+    "pnpm-lock.yaml",
+    "yarn.lock",
+    "bun.lock",
+    "go.work",
+    "go.mod",
+    "pyproject.toml",
+    ".git",
+    "package.json",
+  }) or vim.fn.getcwd()
 end
 
 keymap.set("n", ";f", function()
-  picker().files({ hidden = true, ignored = false })
+  telescope.builtin("find_files", { cwd = project_root(), hidden = true })
 end, { desc = "Find files" })
 
 keymap.set("n", "<leader>fP", function()
-  picker().files({ cwd = vim.fn.stdpath("config"), hidden = true, ignored = false })
+  telescope.builtin("find_files", { cwd = vim.fn.stdpath("config"), hidden = true })
 end, { desc = "Find config file" })
 
 keymap.set("n", ";r", function()
-  picker().grep({ hidden = false, ignored = false, need_search = true, limit_live = 5000 })
+  telescope.builtin("live_grep", { cwd = project_root() })
 end, { desc = "Live grep" })
 
 keymap.set({ "n", "x" }, ";w", function()
-  picker().grep_word({ hidden = false, ignored = false, limit_live = 5000 })
+  telescope.builtin("grep_string", { cwd = project_root() })
 end, { desc = "Grep word or selection" })
 
 keymap.set("n", "\\", function()
-  picker().buffers()
+  telescope.builtin("buffers")
 end, { desc = "Buffers" })
 
 keymap.set("n", ";t", function()
-  picker().help()
+  telescope.builtin("help_tags")
 end, { desc = "Help tags" })
 
 keymap.set("n", ";;", function()
-  picker().resume()
+  telescope.builtin("resume")
 end, { desc = "Resume picker" })
 
 keymap.set("n", ";e", function()
-  picker().diagnostics()
+  telescope.builtin("diagnostics")
 end, { desc = "Diagnostics" })
 
 keymap.set("n", ";s", function()
-  picker().lsp_symbols()
+  telescope.builtin("lsp_document_symbols")
 end, { desc = "Document symbols" })
 
 keymap.set("n", "<leader>e", function()
-  Snacks.explorer()
+  MiniFiles.open(project_root())
 end, { desc = "File explorer" })
 
 keymap.set("n", "sf", function()
-  Snacks.explorer({ cwd = vim.fn.expand("%:p:h") })
+  local path = vim.api.nvim_buf_get_name(0)
+  MiniFiles.open(path ~= "" and path or vim.fn.getcwd())
 end, { desc = "File explorer at buffer path" })

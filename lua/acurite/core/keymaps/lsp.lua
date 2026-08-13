@@ -31,7 +31,7 @@ keymap.set("n", "<C-j>", function()
   diagnostic_jump(1)
 end, vim.tbl_extend("force", opts, { desc = "Next diagnostic" }))
 
--- Was <leader>e, which snacks.nvim also claimed for the file explorer. The
+-- Was <leader>e, which the file explorer also claimed. The
 -- explorer won because it loaded last, leaving this one dead.
 keymap.set("n", "<leader>ld", show_diagnostic_float, vim.tbl_extend("force", opts, { desc = "Line diagnostics" }))
 
@@ -53,7 +53,7 @@ keymap.set("n", "<leader>lx", function()
 end, { desc = "Toggle LSP virtual text" })
 
 keymap.set("n", "<leader>lc", function()
-  Snacks.picker.lsp_config()
+  vim.cmd("checkhealth vim.lsp")
 end, { desc = "LSP info" })
 
 -- Trouble's LSP views. These sat under <leader>c, which collides with the

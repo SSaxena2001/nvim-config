@@ -1,99 +1,3 @@
-local snacks = require("snacks")
-
-snacks.setup({
-  explorer = {
-    replace_netrw = true,
-  },
-  input = {
-    -- Keep command/input prompts stable instead of growing while typing.
-    expand = false,
-    win = {
-      -- A little below the top, horizontally centered.
-      row = 3,
-      width = function()
-        return math.min(40, math.max(30, vim.o.columns - 8))
-      end,
-    },
-  },
-  picker = {
-    ui_select = true,
-    layout = {
-      preset = function()
-        return vim.o.columns >= 120 and "default" or "vertical"
-      end,
-    },
-    matcher = {
-      fuzzy = true,
-      smartcase = true,
-      ignorecase = true,
-      filename_bonus = true,
-      cwd_bonus = false,
-      frecency = false,
-      history_bonus = false,
-    },
-    formatters = {
-      file = {
-        filename_first = false,
-        truncate = "center",
-        git_status_hl = true,
-      },
-    },
-    sources = {
-      files = {
-        hidden = true,
-        ignored = false,
-        exclude = { ".git" },
-      },
-      grep = {
-        hidden = false,
-        ignored = false,
-        need_search = true,
-        limit_live = 5000,
-        exclude = {
-          ".git",
-          "node_modules",
-          "dist",
-          "build",
-          "coverage",
-          ".next",
-          ".turbo",
-          "target",
-        },
-        args = {
-          "--max-filesize",
-          "1M",
-          "--glob",
-          "!*.lock",
-          "--glob",
-          "!package-lock.json",
-          "--glob",
-          "!pnpm-lock.yaml",
-          "--glob",
-          "!yarn.lock",
-        },
-      },
-      explorer = {
-        hidden = true,
-        ignored = false,
-        git_status = true,
-        git_untracked = true,
-        diagnostics = true,
-        follow_file = true,
-        layout = { preset = "sidebar", preview = false },
-      },
-    },
-    win = {
-      input = {
-        keys = {
-          ["<Esc>"] = { "close", mode = { "n", "i" } },
-          ["<C-j>"] = { "list_down", mode = { "n", "i" } },
-          ["<C-k>"] = { "list_up", mode = { "n", "i" } },
-        },
-      },
-    },
-  },
-})
-
 _G.AcuriteCommandLine = _G.AcuriteCommandLine or {}
 
 function _G.AcuriteCommandLine.complete(findstart, base)
@@ -111,9 +15,6 @@ function _G.AcuriteCommandLine.complete(findstart, base)
     return {}
   end
 
-  -- Some custom command completers return all valid subcommands when invoked
-  -- outside the native command line. Keep the dropdown relevant by filtering
-  -- against the token currently being completed.
   local token = base ~= "" and base or (line_before_cursor:match("%S+$") or "")
   if token ~= "" then
     completions = vim.tbl_filter(function(item)
@@ -125,7 +26,6 @@ function _G.AcuriteCommandLine.complete(findstart, base)
 end
 
 local function command_input()
-  -- Floating windows can not be opened from Neovim's command-line window (`q:`).
   if vim.fn.getcmdwintype() ~= "" then
     return
   end
@@ -212,7 +112,5 @@ local function command_input()
   vim.cmd.startinsert({ bang = true })
 end
 
--- Kept here rather than in core/keymaps/: both target the local command_input
--- helper defined above.
 vim.keymap.set({ "n", "x" }, ":", command_input, { desc = "Centered command prompt" })
 vim.keymap.set({ "n", "x" }, "<leader>:", command_input, { desc = "Centered command prompt" })
