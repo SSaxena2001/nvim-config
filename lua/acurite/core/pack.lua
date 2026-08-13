@@ -67,6 +67,18 @@ lazy.on_commands(
   { "mason.nvim", "mason-tool-installer.nvim" },
   "acurite.configs.mason"
 )
+
+-- Preserve the fast hot path: checking package directories costs no registry
+-- initialization. On a fresh machine, automatically wake Mason after init so
+-- mason-tool-installer can bootstrap every configured binary.
+local mason_tools = require("acurite.configs.mason-tools")
+local missing_mason_tool = mason_tools.first_missing()
+if missing_mason_tool then
+  vim.schedule(function()
+    lazy.load({ "mason.nvim", "mason-tool-installer.nvim" }, "acurite.configs.mason")
+    vim.notify("Bootstrapping missing Mason tools (first missing: " .. missing_mason_tool .. ")")
+  end)
+end
 lazy.on_commands(
   { "DiffviewOpen", "DiffviewClose", "DiffviewFileHistory", "DiffviewToggleFiles", "DiffviewFocusFiles" },
   "diffview.nvim",

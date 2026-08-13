@@ -36,35 +36,80 @@ local js_filetypes = {
   astro = true,
 }
 
-local function eslint_config(bufnr)
-  local filename = vim.api.nvim_buf_get_name(bufnr)
-  if filename == "" or vim.fs.root(filename, { "deno.json", "deno.jsonc", "deno.lock" }) then
-    return nil
+local eslint_context_cache = {}
+
+local function package_json_has_eslint_config(path)
+  local ok, lines = pcall(vim.fn.readfile, path)
+  if not ok then
+    return false
   end
-  return vim.fs.find(eslint_config_files, { path = filename, upward = true, type = "file" })[1]
+  local decoded, package = pcall(vim.json.decode, table.concat(lines, "\n"))
+  return decoded and type(package) == "table" and package.eslintConfig ~= nil
 end
 
--- Prefer each project's ESLint binary. This keeps rules/plugins aligned with
--- package.json and avoids a persistent eslint language-server process.
-lint.linters.eslint.cmd = function()
-  local filename = vim.api.nvim_buf_get_name(0)
+local function eslint_context(bufnr)
+  if eslint_context_cache[bufnr] ~= nil then
+    return eslint_context_cache[bufnr] or nil
+  end
+
+  local filename = vim.api.nvim_buf_get_name(bufnr)
+  if filename == "" or vim.fs.root(filename, { "deno.json", "deno.jsonc", "deno.lock" }) then
+    eslint_context_cache[bufnr] = false
+    return nil
+  end
+
+  local config = vim.fs.find(eslint_config_files, { path = filename, upward = true, type = "file" })[1]
+  if not config then
+    for _, package_json in
+      ipairs(vim.fs.find("package.json", { path = filename, upward = true, type = "file", limit = math.huge }))
+    do
+      if package_json_has_eslint_config(package_json) then
+        config = package_json
+        break
+      end
+    end
+  end
+
+  if not config then
+    eslint_context_cache[bufnr] = false
+    return nil
+  end
+
+  local pnp = vim.fs.find({ ".pnp.cjs", ".pnp.js" }, { path = filename, upward = true, type = "file" })[1]
   local binaries = vim.fs.find("node_modules/.bin/eslint", { path = filename, upward = true, type = "file" })
-  return binaries[1] or "eslint"
+  local context = {
+    cwd = vim.fs.dirname(config),
+    cmd = pnp and "yarn" or (binaries[1] or "eslint"),
+    yarn_pnp = pnp ~= nil,
+  }
+  eslint_context_cache[bufnr] = context
+  return context
 end
 
 local function lint_buffer(bufnr)
   if not vim.api.nvim_buf_is_valid(bufnr) or not vim.bo[bufnr].modifiable then
     return
   end
-  local cwd
+  local context
   if js_filetypes[vim.bo[bufnr].filetype] then
-    local config = eslint_config(bufnr)
-    if not config then
+    context = eslint_context(bufnr)
+    if not context then
       return
     end
-    cwd = vim.fs.dirname(config)
   end
-  lint.try_lint(nil, { bufnr = bufnr, cwd = cwd })
+
+  vim.api.nvim_buf_call(bufnr, function()
+    lint.try_lint(nil, {
+      cwd = context and context.cwd or nil,
+      wrap_linter = context and function(linter)
+        linter.cmd = context.cmd
+        if context.yarn_pnp then
+          linter.args = vim.list_extend({ "exec", "eslint" }, linter.args or {})
+        end
+        return linter
+      end or nil,
+    })
+  end)
 end
 
 -- Run after reading, leaving Insert mode, and saving. ESLint processes exit
@@ -73,5 +118,12 @@ vim.api.nvim_create_autocmd({ "BufReadPost", "InsertLeave", "BufWritePost" }, {
   group = vim.api.nvim_create_augroup("AcuriteLint", { clear = true }),
   callback = function(args)
     lint_buffer(args.buf)
+  end,
+})
+
+vim.api.nvim_create_autocmd("BufDelete", {
+  group = "AcuriteLint",
+  callback = function(args)
+    eslint_context_cache[args.buf] = nil
   end,
 })
