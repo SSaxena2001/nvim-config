@@ -23,12 +23,8 @@ require("rose-pine").setup({
   -- used to live there are expressed as highlight overrides. Groups are merged
   -- with the defaults unless `inherit = false` is set.
   highlight_groups = {
-    Keyword = { italic = true },
-    ["@keyword"] = { italic = true },
     Constant = { italic = false, bold = true },
     ["@constant"] = { italic = false, bold = true },
-    Comment = { italic = false },
-    ["@comment"] = { italic = false },
 
     DiagnosticVirtualTextError = { bg = "none", fg = "love" },
     DiagnosticVirtualTextWarn = { bg = "none", fg = "gold" },
