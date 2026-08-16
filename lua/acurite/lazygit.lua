@@ -63,7 +63,3 @@ local function open_lazygit()
 end
 
 vim.keymap.set("n", "<leader>gg", open_lazygit, { desc = "Lazygit (git root)" })
-vim.keymap.set("n", "<leader>gd", "<cmd>DiffviewOpen<cr>", { desc = "Open Git diff view" })
-vim.keymap.set("n", "<leader>gD", "<cmd>DiffviewClose<cr>", { desc = "Close Git diff view" })
-vim.keymap.set("n", "<leader>gh", "<cmd>DiffviewFileHistory %<cr>", { desc = "Current file Git history" })
-vim.keymap.set("n", "<leader>gH", "<cmd>DiffviewFileHistory<cr>", { desc = "Repository Git history" })

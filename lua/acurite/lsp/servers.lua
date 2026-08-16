@@ -1,7 +1,7 @@
 -- Per-server configuration. Every server is declared here with
 -- `vim.lsp.config`; the enable list lives in configs/lsp/init.lua.
-local util = require("acurite.configs.lsp.util")
-local capabilities = require("acurite.configs.lsp.capabilities")
+local util = require("acurite.lsp.util")
+local capabilities = require("acurite.lsp.capabilities")
 
 local on_attach_disable_semantic_tokens = util.on_attach_disable_semantic_tokens
 

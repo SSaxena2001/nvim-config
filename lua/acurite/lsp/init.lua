@@ -1,19 +1,19 @@
 -- LSP entry point. Order matters: diagnostics and the wildcard config are set
 -- up before servers.lua declares individual servers, and the enable list runs
 -- last so every `vim.lsp.config` call it references already exists.
-require("acurite.configs.lsp.diagnostics")
-require("acurite.configs.lsp.commands")
-require("acurite.configs.lsp.attach")
+require("acurite.lsp.diagnostics")
+require("acurite.lsp.commands")
+require("acurite.lsp.attach")
 
 vim.lsp.config("*", {
-  capabilities = require("acurite.configs.lsp.capabilities"),
+  capabilities = require("acurite.lsp.capabilities"),
   flags = {
     -- Reduce didChange traffic to language servers while typing.
     debounce_text_changes = 250,
   },
 })
 
-require("acurite.configs.lsp.servers")
+require("acurite.lsp.servers")
 
 -- Instead of using mason enable all configured LSP via `automatic_enable=true`
 -- Prefer more control by enable manual server call below via vim.lsp.enable("")

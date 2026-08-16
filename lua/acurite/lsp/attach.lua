@@ -6,10 +6,6 @@
 -- LSP actions live under <leader>l (the "lsp" which-key group), and pickers go
 -- through Telescope.
 
-local function picker()
-  return require("acurite.core.telescope")
-end
-
 -- LazyVim's LazyVim.lsp.action[...]: request a code action of one specific
 -- kind and apply it straight away when the server returns exactly one. Used
 -- for the "source.*" actions (organize imports, add missing imports, ...)
@@ -52,7 +48,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
     -- Note 'tagfunc' already routes CTRL-] through the LSP for free.
     if supports("textDocument/definition") then
       map("n", "gd", function()
-        picker().builtin("lsp_definitions")
+        require("telescope.builtin").lsp_definitions()
       end, "Goto Definition")
     end
 
@@ -61,19 +57,19 @@ vim.api.nvim_create_autocmd("LspAttach", {
     -- reachable instead of swallowing the r.
     if supports("textDocument/references") then
       map("n", "gr", function()
-        picker().builtin("lsp_references")
+        require("telescope.builtin").lsp_references()
       end, "References")
     end
 
     if supports("textDocument/implementation") then
       map("n", "gI", function()
-        picker().builtin("lsp_implementations")
+        require("telescope.builtin").lsp_implementations()
       end, "Goto Implementation")
     end
 
     if supports("textDocument/typeDefinition") then
       map("n", "gy", function()
-        picker().builtin("lsp_type_definitions")
+        require("telescope.builtin").lsp_type_definitions()
       end, "Goto Type Definition")
     end
 
@@ -124,7 +120,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
 
     if supports("workspace/willRenameFiles") then
       map("n", "<leader>lR", function()
-        require("acurite.configs.lsp.file-rename").rename_current_file()
+        require("acurite.lsp.file-rename").rename_current_file()
       end, "Rename File")
     end
 
