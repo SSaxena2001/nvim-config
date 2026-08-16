@@ -21,14 +21,6 @@ keymap.set({ "x", "o" }, "ic", select("@class.inner"), { desc = "Select inner cl
 keymap.set({ "x", "o" }, "aa", select("@parameter.outer"), { desc = "Select outer argument/parameter" })
 keymap.set({ "x", "o" }, "ia", select("@parameter.inner"), { desc = "Select inner argument/parameter" })
 
-keymap.set("n", "<leader>a", function()
-  require("nvim-treesitter-textobjects.swap").swap_next("@parameter.inner")
-end, { desc = "Swap with next argument/parameter" })
-
-keymap.set("n", "<leader>A", function()
-  require("nvim-treesitter-textobjects.swap").swap_previous("@parameter.inner")
-end, { desc = "Swap with previous argument/parameter" })
-
 keymap.set({ "n", "x", "o" }, "]m", move("goto_next_start", "@function.outer"), { desc = "Next function start" })
 keymap.set(
   { "n", "x", "o" },

@@ -1,36 +1,54 @@
-require("rose-pine").setup({
-  variant = "main",
-  dark_variant = "main",
+local transparent = true
 
-  -- Keep the terminal background visible, matching the previous setup. This
-  -- also covers floats and sidebars, which rose-pine handles through the same
-  -- transparency flag rather than per-area options.
+require("solarized-osaka").setup({
+  style = "vivid",
+  vivid_brightness = 0.2,
+  transparent = transparent,
+  terminal_colors = true,
   styles = {
-    transparency = true,
-    bold = false,
-    italic = false,
+    comments = { italic = false },
+    keywords = { italic = false },
+    functions = {},
+    variables = {},
+    -- "transparent" here rather than "dark": with a transparent background the
+    -- dark sidebar/float panels are the one thing that still paints over the
+    -- terminal, which defeats the point.
+    sidebars = transparent and "transparent" or "dark",
+    floats = transparent and "transparent" or "dark",
   },
-
-  extend_background_behind_borders = true,
-
-  enable = {
-    terminal = true,
-    legacy_highlights = true,
-    migrations = true,
-  },
-
-  -- rose-pine has no per-token `styles` table, so the italic/bold choices that
-  -- used to live there are expressed as highlight overrides. Groups are merged
-  -- with the defaults unless `inherit = false` is set.
-  highlight_groups = {
-    Constant = { italic = false, bold = true },
-    ["@constant"] = { italic = false, bold = true },
-
-    DiagnosticVirtualTextError = { bg = "none", fg = "love" },
-    DiagnosticVirtualTextWarn = { bg = "none", fg = "gold" },
-    DiagnosticVirtualTextInfo = { bg = "none", fg = "foam" },
-    DiagnosticVirtualTextHint = { bg = "none", fg = "iris" },
-  },
+  sidebars = { "qf", "help", "floats" },
+  hide_inactive_statusline = false,
+  dim_inactive = false,
+  on_highlights = function(hl, c)
+    local prompt = "#2d3149"
+    hl.TelescopeNormal = {
+      bg = c.bg_dark,
+      fg = c.fg_dark,
+    }
+    hl.TelescopeBorder = {
+      bg = c.bg_dark,
+      fg = c.bg_dark,
+    }
+    hl.TelescopePromptNormal = {
+      bg = prompt,
+    }
+    hl.TelescopePromptBorder = {
+      bg = prompt,
+      fg = prompt,
+    }
+    hl.TelescopePromptTitle = {
+      bg = prompt,
+      fg = prompt,
+    }
+    hl.TelescopePreviewTitle = {
+      bg = c.bg_dark,
+      fg = c.bg_dark,
+    }
+    hl.TelescopeResultsTitle = {
+      bg = c.bg_dark,
+      fg = c.bg_dark,
+    }
+  end,
 })
 
-vim.cmd.colorscheme("rose-pine")
+vim.cmd.colorscheme("solarized-osaka")

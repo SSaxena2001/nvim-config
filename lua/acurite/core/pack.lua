@@ -29,22 +29,20 @@ vim.api.nvim_create_autocmd("PackChanged", {
 
 -- Plugins needed to draw the first screen or to service the first keystroke.
 vim.pack.add({
-  -- The repo is named `neovim`, so name it explicitly to keep `require`able as
-  -- "rose-pine".
-  { src = "https://github.com/rose-pine/neovim", name = "rose-pine" },
+  "https://github.com/craftzdog/solarized-osaka.nvim",
   "https://github.com/folke/which-key.nvim",
-  "https://github.com/akinsho/bufferline.nvim",
-  "https://github.com/b0o/incline.nvim",
 
   { src = "https://github.com/nvim-mini/mini.nvim", version = "stable" },
   "https://github.com/stevearc/conform.nvim",
   "https://github.com/mfussenegger/nvim-lint",
   "https://github.com/nvim-tree/nvim-web-devicons",
-  "https://github.com/nvim-lualine/lualine.nvim",
   "https://github.com/nvim-lua/plenary.nvim",
   -- Upstream requires nvim-treesitter itself to stay eager. Parser startup is
   -- still deferred until FileType below, which is the expensive part.
   { src = "https://github.com/nvim-treesitter/nvim-treesitter", version = "main" },
+  "https://github.com/hrsh7th/nvim-cmp",
+  "https://github.com/hrsh7th/cmp-nvim-lsp",
+  "https://github.com/L3MON4D3/LuaSnip",
 })
 
 -- LSP executables are installed here, but Mason's UI and registry do not need
@@ -54,13 +52,8 @@ vim.env.PATH = vim.fn.stdpath("data") .. "/mason/bin:" .. vim.env.PATH
 -- Installed and tracked in the lockfile, but kept off the runtimepath until a
 -- trigger below wakes them; see core/lazy.lua.
 local deferred = {
-  ["trouble.nvim"] = "https://github.com/folke/trouble.nvim",
-  ["zen-mode.nvim"] = "https://github.com/folke/zen-mode.nvim",
   ["cloak.nvim"] = "https://github.com/laytan/cloak.nvim",
-  ["atone.nvim"] = "https://github.com/XXiaoA/atone.nvim",
-  ["leetcode.nvim"] = "https://github.com/kawre/leetcode.nvim",
-  ["nui.nvim"] = "https://github.com/MunifTanjim/nui.nvim",
-  ["render-markdown.nvim"] = "https://github.com/MeanderingProgrammer/render-markdown.nvim",
+  ["netrw.nvim"] = "https://github.com/prichrd/netrw.nvim",
   ["mason.nvim"] = "https://github.com/mason-org/mason.nvim",
   ["mason-tool-installer.nvim"] = "https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim",
   ["gitsigns.nvim"] = "https://github.com/lewis6991/gitsigns.nvim",
@@ -68,9 +61,8 @@ local deferred = {
   ["telescope.nvim"] = "https://github.com/nvim-telescope/telescope.nvim",
   ["telescope-fzf-native.nvim"] = "https://github.com/nvim-telescope/telescope-fzf-native.nvim",
   ["telescope-ui-select.nvim"] = "https://github.com/nvim-telescope/telescope-ui-select.nvim",
-  ["nvim-treesitter-context"] = "https://github.com/nvim-treesitter/nvim-treesitter-context",
+  ["harpoon"] = { src = "https://github.com/ThePrimeagen/harpoon", version = "harpoon2" },
   ["nvim-treesitter-textobjects"] = "https://github.com/nvim-treesitter/nvim-treesitter-textobjects",
-  ["nvim-ts-autotag"] = "https://github.com/windwp/nvim-ts-autotag",
 }
 
 local deferred_specs = vim.tbl_values(deferred)
@@ -86,24 +78,15 @@ if vim.uv.fs_stat(fzf_native_path) and vim.fn.glob(fzf_native_path .. "/build/li
 end
 
 require("acurite.configs.colorschemes")
-require("acurite.configs.ui")
 require("acurite.configs.mini")
-require("acurite.configs.lsp.diagnostics")
+require("acurite.configs.lsp.completion")
 require("acurite.configs.conform")
 require("acurite.configs.lint")
-require("acurite.configs.lualine")
 require("acurite.configs.command-input")
+require("acurite.configs.netrw-help")
 
 -- Command-triggered
-lazy.on_command("Trouble", "trouble.nvim", "acurite.configs.trouble")
-lazy.on_command("ZenMode", "zen-mode.nvim", "acurite.configs.zen-mode")
-lazy.on_command("Atone", "atone.nvim", "acurite.configs.atone")
-lazy.on_command("Leet", { "nui.nvim", "leetcode.nvim" }, "acurite.configs.leetcode")
-lazy.on_command(
-  "Telescope",
-  { "telescope.nvim", "telescope-fzf-native.nvim", "telescope-ui-select.nvim" },
-  "acurite.configs.telescope"
-)
+lazy.on_command("Telescope", require("acurite.core.telescope").plugins, "acurite.configs.telescope")
 lazy.on_commands(
   { "Mason", "MasonInstall", "MasonUninstall", "MasonToolsInstall", "MasonToolsUpdate" },
   { "mason.nvim", "mason-tool-installer.nvim" },
@@ -128,10 +111,6 @@ lazy.on_commands(
 )
 
 -- Event-triggered
-lazy.on_event("FileType", "render-markdown.nvim", "acurite.configs.markdown", {
-  pattern = "markdown",
-})
-
 lazy.on_event("BufReadPre", "cloak.nvim", "acurite.configs.cloak", {
   pattern = { ".env*", "*.env", "wrangler.toml", ".dev.vars" },
   after = function()
@@ -145,9 +124,19 @@ lazy.on_event("BufReadPre", "gitsigns.nvim", "acurite.configs.gitsigns", {
   pattern = "*",
 })
 
+-- `defer` matters here: netrw is still writing the listing when FileType
+-- fires, so the decoration pass has to run after that returns.
+lazy.on_event("FileType", "netrw.nvim", "acurite.configs.netrw", {
+  pattern = "netrw",
+  defer = true,
+  after = function()
+    require("acurite.configs.netrw").decorate_current()
+  end,
+})
+
 lazy.on_event(
   "FileType",
-  { "nvim-treesitter-context", "nvim-treesitter-textobjects", "nvim-ts-autotag" },
+  { "nvim-treesitter-textobjects" },
   "acurite.configs.treesitter",
   { pattern = "*", defer = true }
 )

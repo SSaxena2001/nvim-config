@@ -19,10 +19,8 @@ wk.setup({
   spec = {
     { "<leader>f", group = "find" },
     { "<leader>g", group = "git" },
+    { "<leader>h", group = "harpoon" },
     { "<leader>l", group = "lsp" },
-    { "<leader>x", group = "trouble" },
-    { "<leader>t", group = "treesitter" },
-    { "<leader>m", group = "markdown" },
     { "<leader>b", group = "buffer" },
     { "s", group = "split / explorer" },
     { ";", group = "picker" },

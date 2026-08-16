@@ -27,6 +27,14 @@ keymap.set("n", "[d", function()
   diagnostic_jump(-1)
 end, vim.tbl_extend("force", opts, { desc = "Previous diagnostic" }))
 
+keymap.set("n", "]e", function()
+  diagnostic_jump(1)
+end, vim.tbl_extend("force", opts, { desc = "Next error" }))
+
+keymap.set("n", "[e", function()
+  diagnostic_jump(-1)
+end, vim.tbl_extend("force", opts, { desc = "Previous error" }))
+
 keymap.set("n", "<C-j>", function()
   diagnostic_jump(1)
 end, vim.tbl_extend("force", opts, { desc = "Next diagnostic" }))
@@ -55,8 +63,3 @@ end, { desc = "Toggle LSP virtual text" })
 keymap.set("n", "<leader>lc", function()
   vim.cmd("checkhealth vim.lsp")
 end, { desc = "LSP info" })
-
--- Trouble's LSP views. These sat under <leader>c, which collides with the
--- <leader>c blackhole-change operator in editor.lua.
-keymap.set("n", "<leader>ls", "<cmd>Trouble symbols toggle<cr>", { desc = "Symbols (Trouble)" })
-keymap.set("n", "<leader>lS", "<cmd>Trouble lsp toggle<cr>", { desc = "LSP references/definitions (Trouble)" })

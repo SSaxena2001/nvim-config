@@ -42,50 +42,18 @@ vim.api.nvim_create_autocmd("LspAttach", {
       return client:supports_method(method)
     end
 
-    -- Neovim's native completion applies LSP text edits and expands LSP
-    -- snippets through vim.snippet. Autotrigger only on server-declared trigger
-    -- characters; <C-Space> explicitly requests completion at any point.
-    if supports("textDocument/completion") then
-      vim.lsp.completion.enable(true, client.id, ev.buf, { autotrigger = true })
-
-      map("i", "<C-Space>", vim.lsp.completion.get, "Trigger Completion")
-      map("i", "<CR>", function()
-        return vim.fn.pumvisible() == 1 and "<C-y>" or "<CR>"
-      end, "Accept Completion", { expr = true })
-      map("i", "<Tab>", function()
-        if vim.fn.pumvisible() == 1 then
-          return "<C-n>"
-        end
-        if vim.snippet.active({ direction = 1 }) then
-          vim.snippet.jump(1)
-          return ""
-        end
-        return "<Tab>"
-      end, "Next Completion or Snippet Stop", { expr = true })
-      map("i", "<S-Tab>", function()
-        if vim.fn.pumvisible() == 1 then
-          return "<C-p>"
-        end
-        if vim.snippet.active({ direction = -1 }) then
-          vim.snippet.jump(-1)
-          return ""
-        end
-        return "<S-Tab>"
-      end, "Previous Completion or Snippet Stop", { expr = true })
-    end
+    -- nvim-cmp handles completion for all servers. No need for native completion.
+    -- cmp is enabled globally in configs/cmp.lua with better handling of
+    -- continuous completion while typing.
 
     -- Navigation ------------------------------------------------------------
-    -- Buffer-local so Vim's own `gd` (go to local declaration) and `gt`
-    -- (:tabnext) survive in every buffer without a language server.
+    -- Buffer-local so Vim's own `gd` (go to local declaration) survives in
+    -- every buffer without a language server.
     -- Note 'tagfunc' already routes CTRL-] through the LSP for free.
     if supports("textDocument/definition") then
       map("n", "gd", function()
         picker().builtin("lsp_definitions")
       end, "Goto Definition")
-      map("n", "gt", function()
-        vim.cmd("tab split")
-        vim.lsp.buf.definition()
-      end, "Goto Definition in New Tab")
     end
 
     -- No `nowait` here (LazyVim sets it). Waiting out 'timeoutlen' keeps
@@ -118,36 +86,40 @@ vim.api.nvim_create_autocmd("LspAttach", {
       map("n", "gK", vim.lsp.buf.signature_help, "Signature Help")
     end
 
+    -- Hover ------------------------------------------------------------------
+    -- ThePrimeagen style: K for hover (overrides built-in)
+    map("n", "K", vim.lsp.buf.hover, "Hover")
+
+    -- Format -----------------------------------------------------------------
+    if supports("textDocument/formatting") then
+      map({ "n", "v" }, "<leader>f", function()
+        vim.lsp.buf.format({ async = true })
+      end, "Format")
+    end
+
     -- Code actions ----------------------------------------------------------
     if supports("textDocument/codeAction") then
-      map({ "n", "v" }, "<leader>la", vim.lsp.buf.code_action, "Code Action")
+      -- ThePrimeagen style: <leader>ca for code actions
+      map({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, "Code Action")
 
-      -- No `apply` here: "source" prefix-matches every source.* kind, so this
-      -- is a chooser, not a single known action.
-      map({ "n", "v" }, "<leader>lA", function()
-        vim.lsp.buf.code_action({ context = { only = { "source" }, diagnostics = {} } })
-      end, "Source Action")
+      -- Source actions (organize imports, fix all, etc.)
+      -- Use server-specific kinds if available, fall back to generic
+      local organize_imports_kind = "source.organizeImports"
+      local fix_all_kind = "source.fixAll"
 
-      -- TypeScript-specific kinds, mirroring LazyVim's typescript extra. The
-      -- flag stops a later client on the same buffer from overwriting these
-      -- with the generic kinds below.
       if client.name == "tsgo" then
-        vim.b[ev.buf].acurite_ts_source_actions = true
-        map("n", "<leader>lo", source_action("source.organizeImports.ts"), "Organize Imports")
-        map("n", "<leader>lm", source_action("source.addMissingImports.ts"), "Add Missing Imports")
-        map("n", "<leader>lu", source_action("source.removeUnused.ts"), "Remove Unused Imports")
-        map("n", "<leader>lF", source_action("source.fixAll.ts"), "Fix All")
-      elseif not vim.b[ev.buf].acurite_ts_source_actions then
-        -- Generic "source.*" kinds. gopls and ruff implement some
-        -- subset; servers that do not simply report no action available.
-        map("n", "<leader>lo", source_action("source.organizeImports"), "Organize Imports")
-        map("n", "<leader>lF", source_action("source.fixAll"), "Fix All")
+        organize_imports_kind = "source.organizeImports.ts"
+        fix_all_kind = "source.fixAll.ts"
       end
+
+      map("n", "<leader>o", source_action(organize_imports_kind), "Organize Imports")
+      map("n", "<leader>lF", source_action(fix_all_kind), "Fix All")
     end
 
     -- Rename ----------------------------------------------------------------
     if supports("textDocument/rename") then
-      map("n", "<leader>lr", vim.lsp.buf.rename, "Rename Symbol")
+      -- ThePrimeagen style: <leader>rn for rename
+      map("n", "<leader>rn", vim.lsp.buf.rename, "Rename Symbol")
     end
 
     if supports("workspace/willRenameFiles") then

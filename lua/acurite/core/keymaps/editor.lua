@@ -48,3 +48,38 @@ keymap.set("n", "<C-m>", "<C-i>", opts)
 keymap.set("n", "<leader>bf", function()
   require("conform").format({ bufnr = 0 })
 end, { desc = "Format buffer" })
+
+-- tmux-sessionizer in a new tmux window.
+--
+-- This used to be `<cmd>silent !tmux neww tmux-sessionizer<CR>`. Two problems
+-- with that: `:!` suspends the UI and forces a full redraw on return, and
+-- `silent` discards stderr, so every failure mode -- no tmux server, script
+-- crash, binary not on $PATH -- looked identical to the key doing nothing at
+-- all. Run it as a detached job instead and surface whatever tmux complains
+-- about.
+keymap.set("n", "<C-f>", function()
+  if vim.fn.executable("tmux") == 0 then
+    vim.notify("tmux is not on $PATH", vim.log.levels.ERROR)
+    return
+  end
+
+  if vim.fn.executable("tmux-sessionizer") == 0 then
+    vim.notify("tmux-sessionizer is not on $PATH", vim.log.levels.ERROR)
+    return
+  end
+
+  vim.system({ "tmux", "neww", "tmux-sessionizer" }, { text = true }, function(result)
+    if result.code == 0 then
+      return
+    end
+
+    -- tmux writes "no server running on ..." and friends to stderr.
+    local msg = vim.trim((result.stderr or "") .. (result.stdout or ""))
+    vim.schedule(function()
+      vim.notify(
+        "tmux-sessionizer failed (exit " .. result.code .. ")" .. (msg ~= "" and ": " .. msg or ""),
+        vim.log.levels.ERROR
+      )
+    end)
+  end)
+end, { desc = "tmux sessionizer" })

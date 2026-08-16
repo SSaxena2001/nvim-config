@@ -9,6 +9,7 @@ require("acurite.core.keymaps.window")
 require("acurite.core.keymaps.lsp")
 require("acurite.core.keymaps.picker")
 require("acurite.core.keymaps.git")
+require("acurite.core.keymaps.harpoon")
 require("acurite.core.keymaps.ui")
 require("acurite.core.keymaps.textobj")
 

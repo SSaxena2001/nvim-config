@@ -25,6 +25,9 @@ local ensure_installed = {
   "java",
   "rust",
   "ron",
+  -- Telescope's git pickers (;g) and diffview preview diff buffers, which are
+  -- highlighted with this parser.
+  "diff",
 }
 
 local TreeSitter = require("nvim-treesitter")
@@ -186,15 +189,6 @@ vim.api.nvim_create_autocmd("FileType", {
 -- buffer whose original event triggered the load.
 setup_buffer(vim.api.nvim_get_current_buf())
 
-require("treesitter-context").setup({
-  enable = true,
-  max_lines = 3,
-  min_window_height = 20,
-  multiline_threshold = 5,
-  mode = "cursor",
-  separator = nil,
-})
-
 require("nvim-treesitter-textobjects").setup({
   select = {
     lookahead = true,
@@ -207,21 +201,5 @@ require("nvim-treesitter-textobjects").setup({
   },
   move = {
     set_jumps = true,
-  },
-})
-
-require("nvim-ts-autotag").setup({
-  opts = {
-    enable_close = true, -- Auto-close tags
-    enable_rename = true, -- Auto-rename pairs
-    enable_close_on_slash = false, -- Disable auto-close on trailing `</`
-  },
-  per_filetype = {
-    ["html"] = {
-      enable_close = true,
-    },
-    ["typescriptreact"] = {
-      enable_close = true,
-    },
   },
 })

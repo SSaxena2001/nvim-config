@@ -98,26 +98,6 @@ require("mini.cmdline").setup({
 })
 require("mini.pairs").setup()
 require("mini.surround").setup()
-require("mini.files").setup({
-  mappings = {
-    go_in = "<Right>",
-    go_in_plus = "<CR>",
-    go_out = "<Left>",
-    go_out_plus = "",
-  },
-  options = {
-    -- Keep deletions recoverable under stdpath("data")/mini.files/trash.
-    permanent_delete = false,
-    use_as_default_explorer = true,
-  },
-  windows = {
-    -- A single viewport keeps the focused directory anchored in place while
-    -- navigating; MiniFiles' multi-column branch view shifts focus by design.
-    max_number = 1,
-    preview = false,
-    width_focus = 36,
-  },
-})
 
 local hipatterns = require("mini.hipatterns")
 hipatterns.setup({

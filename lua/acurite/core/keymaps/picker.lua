@@ -35,6 +35,12 @@ keymap.set("n", "\\", function()
   telescope.builtin("buffers")
 end, { desc = "Buffers" })
 
+-- Changed files only: git_status lists the working tree + index diff, so this
+-- is the "what am I actually touching right now" picker.
+keymap.set("n", ";g", function()
+  telescope.builtin("git_status", { cwd = project_root() })
+end, { desc = "Git changed files" })
+
 keymap.set("n", ";t", function()
   telescope.builtin("help_tags")
 end, { desc = "Help tags" })
@@ -51,11 +57,21 @@ keymap.set("n", ";s", function()
   telescope.builtin("lsp_document_symbols")
 end, { desc = "Document symbols" })
 
+-- Toggle rather than a plain :Ex. netrw replaces the file in the current
+-- window, so "closing" it means going back — and going back deserves the same
+-- key that opened it. Avoids mapping `q`, which netrw needs as the prefix for
+-- qf, qb, qF and qL.
 keymap.set("n", "<leader>e", function()
-  MiniFiles.open(project_root())
-end, { desc = "File explorer" })
+  if vim.bo.filetype ~= "netrw" then
+    vim.cmd.Ex()
+    return
+  end
 
-keymap.set("n", "sf", function()
-  local path = vim.api.nvim_buf_get_name(0)
-  MiniFiles.open(path ~= "" and path or vim.fn.getcwd())
-end, { desc = "File explorer at buffer path" })
+  -- :Rex returns to the buffer netrw replaced, but it is a silent no-op when
+  -- there is nothing to return to (Neovim was started on a directory). Detect
+  -- that by checking whether the window actually left netrw.
+  pcall(vim.cmd.Rexplore)
+  if vim.bo.filetype == "netrw" then
+    vim.cmd.enew()
+  end
+end, { desc = "File explorer (toggle)" })
