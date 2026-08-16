@@ -39,10 +39,6 @@ return {
           "clang-format",
           "goimports",
           "shfmt",
-          "black",
-          "isort",
-          -- Linters
-          "pylint",
         },
         run_on_start = true,
         start_delay = 3000,

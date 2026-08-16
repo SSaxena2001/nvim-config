@@ -86,12 +86,8 @@ vim.api.nvim_create_autocmd("LspAttach", {
     -- ThePrimeagen style: K for hover (overrides built-in)
     map("n", "K", vim.lsp.buf.hover, "Hover")
 
-    -- Format -----------------------------------------------------------------
-    if supports("textDocument/formatting") then
-      map({ "n", "v" }, "<leader>f", function()
-        vim.lsp.buf.format({ async = true })
-      end, "Format")
-    end
+    -- Formatting is <leader>bf via conform, which falls back to the LSP
+    -- anyway. A second buffer-local <leader>f would shadow the "find" group.
 
     -- Code actions ----------------------------------------------------------
     if supports("textDocument/codeAction") then
@@ -108,7 +104,10 @@ vim.api.nvim_create_autocmd("LspAttach", {
         fix_all_kind = "source.fixAll.ts"
       end
 
-      map("n", "<leader>o", source_action(organize_imports_kind), "Organize Imports")
+      -- Under <leader>l, not <leader>o: <leader>o is the open-line-without-
+      -- comment-continuation map, which a buffer-local binding would shadow in
+      -- every buffer that has a server attached.
+      map("n", "<leader>lo", source_action(organize_imports_kind), "Organize Imports")
       map("n", "<leader>lF", source_action(fix_all_kind), "Fix All")
     end
 
