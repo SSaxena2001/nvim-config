@@ -18,6 +18,15 @@ vim.opt.shiftwidth = 4
 vim.opt.tabstop = 4
 vim.opt.softtabstop = 4
 
+-- Folds follow the syntax tree. vim.treesitter.foldexpr returns 0 for any
+-- buffer without a parser, so this degrades to "no folds" rather than
+-- breaking. foldlevelstart keeps files opening fully unfolded -- `zc` folds
+-- the node under the cursor when it is wanted.
+vim.opt.foldmethod = "expr"
+vim.opt.foldexpr = "v:lua.vim.treesitter.foldexpr()"
+vim.opt.foldtext = ""
+vim.opt.foldlevelstart = 99
+
 vim.opt.wrap = false
 vim.opt.scrolloff = 10
 vim.opt.signcolumn = "yes"

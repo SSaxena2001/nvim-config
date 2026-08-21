@@ -32,7 +32,38 @@ local parsers = {
   "yaml",
 }
 
-require("nvim-treesitter").install(parsers)
+local ts = require("nvim-treesitter")
+
+-- What is already built, as a set. nvim-treesitter installs into
+-- stdpath("data")/site/parser, which is on the runtimepath.
+local installed = {}
+for _, lang in ipairs(ts.get_installed("parsers")) do
+  installed[lang] = true
+end
+
+-- Only ask for what is missing: install() re-fetches whatever it is handed, so
+-- passing the whole list would rebuild every parser on every startup.
+local missing = vim.tbl_filter(function(lang)
+  return not installed[lang]
+end, parsers)
+
+if #missing > 0 then
+  ts.install(missing)
+end
+
+-- Languages that can be built but are not in the list above. Checked once so a
+-- filetype nobody anticipated still gets highlighted rather than silently
+-- falling back to Vim's regex syntax.
+local available = {}
+for _, lang in ipairs(ts.get_available()) do
+  available[lang] = true
+end
+
+local function start(buf, lang)
+  -- A parser whose .so predates its queries raises at highlight time rather
+  -- than returning an error, so guard the whole thing.
+  pcall(vim.treesitter.start, buf, lang)
+end
 
 vim.api.nvim_create_autocmd("FileType", {
   group = vim.api.nvim_create_augroup("Treesitter", { clear = true }),
@@ -47,9 +78,25 @@ vim.api.nvim_create_autocmd("FileType", {
       return
     end
 
-    -- A parser whose .so predates its queries raises at highlight time rather
-    -- than returning an error, so guard the whole thing.
-    pcall(vim.treesitter.start, args.buf, lang)
+    if installed[lang] then
+      start(args.buf, lang)
+      return
+    end
+
+    if not available[lang] then
+      return
+    end
+
+    -- Build it now, then highlight when it lands. install() is async, so the
+    -- buffer is already on screen with Vim's syntax highlighting by then.
+    ts.install({ lang }):await(function()
+      installed[lang] = true
+      if vim.api.nvim_buf_is_valid(args.buf) then
+        vim.schedule(function()
+          start(args.buf, lang)
+        end)
+      end
+    end)
   end,
 })
 
