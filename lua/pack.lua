@@ -12,7 +12,7 @@ vim.pack.add({
   { src = "https://github.com/nvim-treesitter/nvim-treesitter-textobjects", version = "main" },
 
   -- Colorscheme.
-  { src = "https://github.com/craftzdog/solarized-osaka.nvim" },
+  { src = "https://github.com/EdenEast/nightfox.nvim" },
 
   -- Sign-column git hunks. No native equivalent.
   { src = "https://github.com/lewis6991/gitsigns.nvim" },

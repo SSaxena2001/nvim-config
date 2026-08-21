@@ -1,19 +1,16 @@
-require("solarized-osaka").setup({
-  style = "vivid",
-  vivid_brightness = 0.2,
-  transparent = true,
-  terminal_colors = true,
-  styles = {
-    comments = { italic = false },
-    keywords = { italic = false, bold = true },
-    functions = {},
-    variables = {},
-    sidebars = "dark",
-    floats = "dark",
+require("nightfox").setup({
+  groups = {
+    all = {
+      ["@markup.italic"] = { style = "italic" },
+      -- Make and/or/not stand out more
+      ["@keyword.operator"] = { link = "@keyword" },
+      -- Make markdown links stand out
+      ["@text.reference"] = { link = "@keyword" },
+      ["@text.literal"] = { style = "" }, -- Don't italicize
+      ["@codeblock"] = { bg = "palette.bg0" },
+      ["QuickFixLine"] = { bg = "palette.sel1" },
+    },
   },
-  sidebars = { "qf", "help", "terminal", "floats" },
-  hide_inactive_statusline = false,
-  dim_inactive = false,
 })
 
-vim.cmd.colorscheme("solarized-osaka")
+vim.cmd.colorscheme("nightfox")

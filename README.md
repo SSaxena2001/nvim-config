@@ -45,7 +45,9 @@ Eleven, all either without a native equivalent or required to install one:
 
 - `nvim-treesitter` + `nvim-treesitter-textobjects` — Neovim ships parsers for
   only c/lua/markdown/query/vim/vimdoc
-- `solarized-osaka.nvim` — colorscheme
+- `nightfox.nvim` — colorscheme. `lua/colorscheme.lua` activates the `nightfox`
+  variant; `dayfox`, `dawnfox`, `duskfox`, `nordfox`, `terafox` and `carbonfox`
+  are one word away, and the statusline follows whichever is active.
 - `gitsigns.nvim` — sign-column git hunks
 - `supermaven-nvim` — AI inline completion
 - `nvim-web-devicons` — filetype glyphs for oil's icon column and the
