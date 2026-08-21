@@ -21,7 +21,10 @@ require("conform").setup({
 
     lua = { "stylua" },
 
-    go = { "goimports" },
+    -- gofmt, not goimports. goimports is gofmt plus import management -- it
+    -- adds missing imports and drops unused ones on save -- so this is the
+    -- narrower of the two by choice.
+    go = { "gofmt" },
     gomod = { "gofmt" },
     gowork = { "gofmt" },
 
