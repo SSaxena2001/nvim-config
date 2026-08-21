@@ -17,7 +17,9 @@ keymap.set("x", "<Leader>p", '"_dP', { desc = "Paste over selection (keep regist
 
 keymap.set({ "n", "v" }, "<Leader>c", '"_c')
 keymap.set({ "n", "v" }, "<Leader>C", '"_C')
-keymap.set({ "n", "v" }, "<Leader>d", '"_d')
+-- Blackhole delete is visual-mode only: normal-mode <leader>d is the
+-- diagnostics-to-quickfix map below. <leader>D still covers normal mode.
+keymap.set("v", "<Leader>d", '"_d')
 keymap.set({ "n", "v" }, "<Leader>D", '"_D')
 
 -- Movement ---------------------------------------------------------------
@@ -68,10 +70,12 @@ keymap.set("n", "<leader>S", [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left
 keymap.set("n", "ss", ":split<Return>", opts)
 keymap.set("n", "sv", ":vsplit<Return>", opts)
 
-keymap.set("n", "sh", "<C-w>h")
-keymap.set("n", "sk", "<C-w>k")
-keymap.set("n", "sj", "<C-w>j")
-keymap.set("n", "sl", "<C-w>l")
+-- <C-l> is also supermaven's accept_suggestion, but that binding is insert
+-- mode only, so the two never collide.
+keymap.set("n", "<C-h>", "<C-w>h", { desc = "Move to left split" })
+keymap.set("n", "<C-j>", "<C-w>j", { desc = "Move to below split" })
+keymap.set("n", "<C-k>", "<C-w>k", { desc = "Move to above split" })
+keymap.set("n", "<C-l>", "<C-w>l", { desc = "Move to right split" })
 
 keymap.set("n", "<C-w><left>", "<C-w><")
 keymap.set("n", "<C-w><right>", "<C-w>>")
@@ -111,28 +115,20 @@ end, { desc = "Previous diagnostic" })
 
 keymap.set("n", "<leader>ld", show_diagnostic_float, { desc = "Line diagnostics" })
 
+keymap.set("n", "<leader>d", function()
+  vim.diagnostic.setqflist()
+  vim.cmd("copen")
+end, { silent = true, desc = "Diagnostics to quickfix" })
+
 keymap.set("n", "<leader>i", function()
   vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = 0 }), { bufnr = 0 })
 end, { desc = "Toggle inlay hints" })
 
 -- File explorer ----------------------------------------------------------
--- Toggle rather than a plain :Ex. netrw replaces the file in the current
--- window, so "closing" it means going back -- and going back deserves the same
--- key that opened it. `q` is left unmapped because netrw needs it as the
--- prefix for qf, qb, qF and qL.
-keymap.set("n", "<leader>e", function()
-  if vim.bo.filetype ~= "netrw" then
-    vim.cmd.Ex()
-    return
-  end
-
-  -- :Rex is a silent no-op when there is nothing to return to (Neovim was
-  -- started on a directory), so check whether the window actually left netrw.
-  pcall(vim.cmd.Rexplore)
-  if vim.bo.filetype == "netrw" then
-    vim.cmd.enew()
-  end
-end, { desc = "File explorer (toggle)" })
+-- :Lexplore is a toggle: it opens netrw in a fixed-width left split and closes
+-- that split when pressed again. netrw_winsize and netrw_browse_split are set
+-- for this in lua/netrw.lua.
+keymap.set("n", "<leader>e", ":Lexplore<cr>", { silent = true, desc = "File explorer" })
 
 -- tmux -------------------------------------------------------------------
 -- Run tmux-sessionizer in a new tmux window. Deliberately not
