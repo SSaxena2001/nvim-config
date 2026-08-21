@@ -18,7 +18,7 @@ no built-in equivalent are installed by `vim.pack` (Neovim 0.12+).
 | `lua/lsp/` | Native LSP: server configs, attach keymaps, diagnostics |
 | `lua/find.lua` | `findfunc` for `:find`, backed by ripgrep |
 | `lua/grep.lua` | `grepprg=rg`, `grepformat` |
-| `lua/statusline.lua` | Hand-rolled statusline |
+| `lua/statusline.lua` | Hand-rolled statusline: mode, git branch, path, diagnostics, filetype |
 | `lua/formatting.lua` | `BufWritePre` shell formatter, LSP fallback |
 | `lua/lazygit.lua` | lazygit in a terminal tab |
 
@@ -42,13 +42,15 @@ handlers. quicker.nvim styles the quickfix window most of them land in.
 
 ## Plugins
 
-Eight, all either without a native equivalent or required to install one:
+Nine, all either without a native equivalent or required to install one:
 
 - `nvim-treesitter` + `nvim-treesitter-textobjects` — Neovim ships parsers for
   only c/lua/markdown/query/vim/vimdoc
 - `solarized-osaka.nvim` — colorscheme
 - `gitsigns.nvim` — sign-column git hunks
 - `supermaven-nvim` — AI inline completion
+- `nvim-web-devicons` — filetype glyphs for oil's icon column and the
+  statusline. Needs a Nerd Font in the terminal.
 - `oil.nvim` — the file explorer as an editable buffer. Registered as the
   default file explorer, so `nvim .` and `:e src/` open it. `-` walks to the
   parent directory, `<leader>e` opens a float. netrw is not configured.

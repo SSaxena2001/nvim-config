@@ -1,14 +1,12 @@
 -- oil.nvim: the file explorer is a normal buffer. Renames, deletes and
 -- creations are ordinary text edits applied on :w.
 --
--- No icon column: nvim-web-devicons and mini.icons are both gone, and oil's
--- icon column needs one of them.
 require("oil").setup({
   -- Take over directory buffers, so `nvim .` and `:e src/` open oil. netrw is
   -- no longer configured at all.
   default_file_explorer = true,
 
-  columns = {},
+  columns = { "icon" },
 
   win_options = {
     signcolumn = "no",

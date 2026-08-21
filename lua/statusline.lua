@@ -18,6 +18,28 @@ local modes = {
 	["\19"] = "S-BLOCK",
 }
 
+-- Filetype glyph, coloured with the icon's own highlight group. Falls back to
+-- the bare filetype name when devicons has nothing for the buffer.
+local function filetype_icon()
+	local ft = vim.bo.filetype
+	if ft == "" then
+		return ""
+	end
+
+	local ok, devicons = pcall(require, "nvim-web-devicons")
+	if not ok then
+		return ft
+	end
+
+	local name = vim.fn.expand("%:t")
+	local icon, hl = devicons.get_icon(name, vim.fn.expand("%:e"), { default = true })
+	if not icon then
+		return ft
+	end
+
+	return "%#" .. hl .. "#" .. icon .. "%* " .. ft
+end
+
 function _G._statusline()
 	local mode = modes[vim.fn.mode()] or vim.fn.mode():upper()
 	local branch = vim.b.git_branch and "%#StlGit# " .. vim.b.git_branch .. " %*" or ""
@@ -33,7 +55,7 @@ function _G._statusline()
 		end
 	end
 
-	return "%#StlMode# " .. mode .. " %*" .. branch .. " " .. path .. "%=" .. diag .. vim.bo.filetype .. " %l:%c"
+	return "%#StlMode# " .. mode .. " %*" .. branch .. " " .. path .. "%=" .. diag .. filetype_icon() .. " %l:%c"
 end
 
 vim.api.nvim_create_autocmd("BufEnter", {

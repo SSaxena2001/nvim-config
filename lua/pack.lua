@@ -25,6 +25,10 @@ vim.pack.add({
   { src = "https://github.com/mason-org/mason.nvim" },
   { src = "https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim" },
 
+  -- Filetype icons. Needed by oil's icon column and the statusline; requires a
+  -- Nerd Font in the terminal.
+  { src = "https://github.com/nvim-tree/nvim-web-devicons" },
+
   -- File explorer as an editable buffer. Replaces netrw.
   { src = "https://github.com/stevearc/oil.nvim" },
 
@@ -39,5 +43,6 @@ require("plugins.mason")
 require("plugins.treesitter")
 require("plugins.gitsigns")
 require("plugins.supermaven")
+require("plugins.devicons")
 require("plugins.oil")
 require("plugins.quicker")
