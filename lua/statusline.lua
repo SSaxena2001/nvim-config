@@ -49,41 +49,36 @@ local function derived_palette()
   }
 end
 
--- nightfox ships several variants -- nightfox, dayfox, dawnfox, duskfox,
--- nordfox, terafox, carbonfox -- and its palette module loads any of them by
--- name. Its accent colours are tables of base/bright/dim shades.
-local nightfox_variants = {
-  nightfox = true,
-  dayfox = true,
-  dawnfox = true,
-  duskfox = true,
-  nordfox = true,
-  terafox = true,
-  carbonfox = true,
+-- rose-pine loads as "rose-pine" plus one colorscheme per variant. Its palette
+-- module reads whichever variant is configured, so it needs no argument.
+local rose_pine_variants = {
+  ["rose-pine"] = true,
+  ["rose-pine-main"] = true,
+  ["rose-pine-moon"] = true,
+  ["rose-pine-dawn"] = true,
 }
 
 local function palette()
   -- Gate on the *active* colorscheme, not on whether the module happens to be
-  -- loadable: nightfox.palette resolves whenever the plugin is installed, so
+  -- loadable: rose-pine.palette resolves whenever the plugin is installed, so
   -- requiring it blindly would keep its palette after a switch to some other
   -- theme.
   local name = vim.g.colors_name
-  if name and nightfox_variants[name] then
-    local ok, nightfox = pcall(require, "nightfox.palette")
+  if name and rose_pine_variants[name] then
+    local ok, p = pcall(require, "rose-pine.palette")
     if ok then
-      local p = nightfox.load(name)
       return {
-        bg = p.bg0,
-        fg = p.fg1,
-        blue = p.blue.base,
-        green = p.green.base,
-        magenta = p.magenta.base,
-        violet = p.pink.base,
-        red = p.red.base,
-        orange = p.orange.base,
-        cyan = p.cyan.base,
-        base00 = p.comment,
-        base01 = p.fg3,
+        bg = p.base,
+        fg = p.text,
+        blue = p.foam,
+        green = p.leaf,
+        magenta = p.iris,
+        violet = p.rose,
+        red = p.love,
+        orange = p.gold,
+        cyan = p.pine,
+        base00 = p.muted,
+        base01 = p.subtle,
       }
     end
   end

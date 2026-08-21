@@ -11,8 +11,9 @@ vim.pack.add({
   { src = "https://github.com/nvim-treesitter/nvim-treesitter", version = "main" },
   { src = "https://github.com/nvim-treesitter/nvim-treesitter-textobjects", version = "main" },
 
-  -- Colorscheme.
-  { src = "https://github.com/EdenEast/nightfox.nvim" },
+  -- Colorscheme. `name` is set because the repo is called "neovim", which
+  -- would otherwise be the plugin's directory and require() name.
+  { src = "https://github.com/rose-pine/neovim", name = "rose-pine" },
 
   -- Sign-column git hunks. No native equivalent.
   { src = "https://github.com/lewis6991/gitsigns.nvim" },

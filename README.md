@@ -47,9 +47,9 @@ Eleven, all either without a native equivalent or required to install one:
   only c/lua/markdown/query/vim/vimdoc. Highlighting starts on `FileType`, and
   a filetype whose parser is missing but buildable is installed on the spot.
   Folds come from the tree (`foldexpr`, see `lua/options.lua`).
-- `nightfox.nvim` — colorscheme. `lua/colorscheme.lua` activates the `nightfox`
-  variant; `dayfox`, `dawnfox`, `duskfox`, `nordfox`, `terafox` and `carbonfox`
-  are one word away, and the statusline follows whichever is active.
+- `rose-pine` — colorscheme. `lua/colorscheme.lua` activates the `moon`
+  variant; `main` and the light `dawn` are one word away, and the statusline
+  follows whichever is active.
 - `gitsigns.nvim` — sign-column git hunks
 - `supermaven-nvim` — AI inline completion
 - `nvim-web-devicons` — filetype glyphs for oil's icon column and the
