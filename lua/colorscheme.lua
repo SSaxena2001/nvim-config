@@ -1,4 +1,11 @@
 require("nightfox").setup({
+  options = {
+    -- Let the terminal's own background show through.
+    transparent = true,
+    -- Publish the palette to g:terminal_color_0..15, so :terminal buffers and
+    -- lazygit use the same colours as everything else.
+    terminal_colors = true,
+  },
   groups = {
     all = {
       ["@markup.italic"] = { style = "italic" },
