@@ -1,8 +1,18 @@
--- Diagnostic presentation. No glyphs anywhere: severity is conveyed by
--- highlight colour, the underline, and the message text itself.
+-- Diagnostic presentation.
+--
+-- The gutter glyphs are the same codicons the statusline counts with, so a
+-- severity looks the same wherever it appears. signcolumn is "yes:2" (see
+-- lua/options.lua) so these and gitsigns' hunk markers each get a column
+-- instead of the higher-priority one hiding the other.
 vim.diagnostic.config({
-  -- No gutter signs; the sign column is reserved for git diff markers.
-  signs = false,
+  signs = {
+    text = {
+      [vim.diagnostic.severity.ERROR] = "",
+      [vim.diagnostic.severity.WARN] = "",
+      [vim.diagnostic.severity.INFO] = "",
+      [vim.diagnostic.severity.HINT] = "",
+    },
+  },
   float = {
     border = "rounded",
     style = "minimal",

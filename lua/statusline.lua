@@ -136,7 +136,7 @@ function _G._statusline()
 
   local diag = ""
   local counts = vim.diagnostic.count(0) or {}
-  local labels = { " ", " ", " ", " " }
+  local labels = { " ", " ", " ", " " }
   local hls = { "DiagnosticError", "DiagnosticWarn", "DiagnosticInfo", "DiagnosticHint" }
   for i = 1, 4 do
     if counts[i] and counts[i] > 0 then

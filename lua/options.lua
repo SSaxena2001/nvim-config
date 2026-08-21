@@ -29,7 +29,9 @@ vim.opt.foldlevelstart = 99
 
 vim.opt.wrap = false
 vim.opt.scrolloff = 10
-vim.opt.signcolumn = "yes"
+-- Two columns: gitsigns takes one, diagnostics the other. With a single
+-- column the higher-priority sign wins and the other is invisible.
+vim.opt.signcolumn = "yes:2"
 vim.opt.colorcolumn = "80"
 vim.opt.termguicolors = true
 
