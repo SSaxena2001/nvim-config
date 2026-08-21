@@ -18,8 +18,7 @@ no built-in equivalent are installed by `vim.pack` (Neovim 0.12+).
 | `lua/lsp/` | Native LSP: server configs, attach keymaps, diagnostics |
 | `lua/find.lua` | `findfunc` for `:find`, backed by ripgrep |
 | `lua/grep.lua` | `grepprg=rg`, `grepformat` |
-| `lua/statusline.lua` | Hand-rolled statusline: mode, git branch, path, diagnostics, filetype |
-| `lua/formatting.lua` | `BufWritePre` shell formatter, LSP fallback |
+| `lua/statusline.lua` | Hand-rolled statusline, coloured from the active theme's palette |
 | `lua/lazygit.lua` | lazygit in a terminal tab |
 
 ## Pickers
@@ -42,7 +41,7 @@ handlers. quicker.nvim styles the quickfix window most of them land in.
 
 ## Plugins
 
-Nine, all either without a native equivalent or required to install one:
+Eleven, all either without a native equivalent or required to install one:
 
 - `nvim-treesitter` + `nvim-treesitter-textobjects` — Neovim ships parsers for
   only c/lua/markdown/query/vim/vimdoc
@@ -56,6 +55,9 @@ Nine, all either without a native equivalent or required to install one:
   parent directory, `<leader>e` opens a float. netrw is not configured.
 - `quicker.nvim` — quickfix styling, context lines (`>` / `<` inside the
   quickfix window) and an editable quickfix buffer
+- `conform.nvim` — formatter dispatch on save, with an LSP fallback
+- `harpoon` (branch `harpoon2`) + `plenary.nvim` — pinned files, jumped to by
+  index
 - `mason.nvim` + `mason-tool-installer.nvim` — installs the language server and
   formatter binaries. Not an LSP layer: `vim.lsp.config`/`vim.lsp.enable` do
   that, and there is no nvim-lspconfig or mason-lspconfig.

@@ -20,6 +20,14 @@ vim.pack.add({
   -- AI inline completion. No native equivalent.
   { src = "https://github.com/supermaven-inc/supermaven-nvim" },
 
+  -- Formatter dispatch on save, with an LSP fallback. Replaces the hand-rolled
+  -- BufWritePre autocmd this config used to carry.
+  { src = "https://github.com/stevearc/conform.nvim" },
+
+  -- Pinned files, jumped to by index. Needs plenary.
+  { src = "https://github.com/nvim-lua/plenary.nvim" },
+  { src = "https://github.com/ThePrimeagen/harpoon", version = "harpoon2" },
+
   -- Installer for language server and formatter binaries. Not an LSP layer:
   -- see lua/plugins/mason.lua.
   { src = "https://github.com/mason-org/mason.nvim" },
@@ -46,3 +54,5 @@ require("plugins.supermaven")
 require("plugins.devicons")
 require("plugins.oil")
 require("plugins.quicker")
+require("plugins.conform")
+require("plugins.harpoon")

@@ -27,13 +27,15 @@ local fallback_ignore = { "node_modules", "%.git", "%.cache", "dist", "build", "
 
 local function candidates(root)
   if vim.fn.executable("rg") == 1 then
-    local out = vim.system({
-      "rg",
-      "--files",
-      "--hidden",
-      "--glob",
-      "!.git/*",
-    }, { cwd = root, text = true }):wait()
+    local out = vim
+      .system({
+        "rg",
+        "--files",
+        "--hidden",
+        "--glob",
+        "!.git/*",
+      }, { cwd = root, text = true })
+      :wait()
 
     if out.code == 0 then
       return vim.split(out.stdout, "\n", { trimempty = true })
