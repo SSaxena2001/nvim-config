@@ -1,32 +1,35 @@
-require("monokai-nightasty").setup({
-  -- Let the terminal's own background through. The plugin has no "vibrant"
-  -- variant -- only dark/light plus this background setting.
-  dark_style_background = "transparent",
-
-  hl_styles = {
-    -- Keep floats and sidebars opaque so oil's float and the completion popup
-    -- stay readable over a transparent buffer.
-    floats = "dark",
-    sidebars = "dark",
-  },
+-- oh-my-monokai is the Neovim answer to the Monokai Vibrant VS Code theme,
+-- which it credits as its inspiration; monokai-vibrant itself has no Neovim
+-- port. Built on monokai-pro.nvim's structure.
+require("oh-my-monokai").setup({
+  -- Let the terminal's own background through.
+  transparent_background = true,
 
   -- Publish the palette to g:terminal_color_0..15, which is what :terminal
   -- buffers use -- lazygit opens in one.
   terminal_colors = true,
 
-  on_highlights = function(hl, c)
-    hl["@markup.italic"] = { italic = true }
-    -- Make and/or/not stand out more
-    hl["@keyword.operator"] = { link = "@keyword" }
-    -- Make markdown links stand out. @markup.link is the current name for what
-    -- used to be @text.reference; @text.* was renamed in Neovim 0.10 and no
-    -- longer matches anything.
-    hl["@markup.link"] = { link = "@keyword" }
-    -- Don't italicize literals (formerly @text.literal)
-    hl["@markup.raw"] = { italic = false }
-    hl["@codeblock"] = { bg = c.bg_dark }
-    hl["QuickFixLine"] = { bg = c.grey_dark }
+  palette = "default",
+
+  -- Keep these panels opaque so they stay readable over a transparent buffer.
+  background_clear = {},
+
+  ---@param c Colorscheme
+  override = function(c)
+    return {
+      ["@markup.italic"] = { italic = true },
+      -- Make and/or/not stand out more
+      ["@keyword.operator"] = { link = "@keyword" },
+      -- Make markdown links stand out. @markup.link is the current name for
+      -- what used to be @text.reference; @text.* was renamed in Neovim 0.10
+      -- and no longer matches anything.
+      ["@markup.link"] = { link = "@keyword" },
+      -- Don't italicize literals (formerly @text.literal)
+      ["@markup.raw"] = { italic = false },
+      ["@codeblock"] = { bg = c.base.dark1 },
+      ["QuickFixLine"] = { bg = c.base.dimmed5 },
+    }
   end,
 })
 
-vim.cmd.colorscheme("monokai-nightasty")
+vim.cmd.colorscheme("oh-my-monokai")

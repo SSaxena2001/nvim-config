@@ -13,7 +13,7 @@ vim.pack.add({
 
   -- Colorscheme. rose-pine stays installed as the alternative; whichever one
   -- lua/colorscheme.lua activates is the one the statusline reads.
-  { src = "https://github.com/polirritmico/monokai-nightasty.nvim" },
+  { src = "https://github.com/justinsgithub/oh-my-monokai.nvim" },
   { src = "https://github.com/rose-pine/neovim", name = "rose-pine" },
 
   -- Sign-column git hunks. No native equivalent.

@@ -80,25 +80,25 @@ for _, name in ipairs({ "rose-pine", "rose-pine-main", "rose-pine-moon", "rose-p
   readers[name] = rose_pine
 end
 
-readers["monokai-nightasty"] = function()
-  local ok, p = pcall(require, "monokai-nightasty.colors.dark")
+readers["oh-my-monokai"] = function()
+  local ok, p = pcall(require, "oh-my-monokai.colorscheme.palette.default")
   if not ok then
     return nil
   end
   return {
     -- The buffer background is transparent, so the mode chip takes its
-    -- foreground from the opaque dark background instead.
-    bg = p.bg_dark,
-    fg = p.fg,
-    blue = p.blue,
+    -- foreground from the palette's opaque dark instead.
+    bg = p.dark,
+    fg = p.text,
+    blue = p.sky,
     green = p.green,
     magenta = p.magenta,
     violet = p.purple,
     red = p.red,
     orange = p.orange,
-    cyan = p.blue_alt,
-    base00 = p.grey,
-    base01 = p.grey_medium,
+    cyan = p.cyan,
+    base00 = p.dimmed3,
+    base01 = p.dimmed2,
   }
 end
 
