@@ -50,6 +50,8 @@ Eleven, all either without a native equivalent or required to install one:
 - `rose-pine` — colorscheme. `lua/colorscheme.lua` activates the `moon`
   variant; `main` and the light `dawn` are one word away, and the statusline
   follows whichever is active.
+- `nvim-autopairs` — auto-closes brackets, quotes and tags. Treesitter-aware,
+  so it does not pair inside strings or comments.
 - `conform.nvim` — formatter dispatch on save, with an LSP fallback
 - `harpoon` (branch `harpoon2`) + `plenary.nvim` — pinned files, jumped to by
   index

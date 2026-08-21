@@ -21,6 +21,9 @@ vim.pack.add({
   -- AI inline completion. No native equivalent.
   { src = "https://github.com/supermaven-inc/supermaven-nvim" },
 
+  -- Auto-close brackets, quotes and tags. Neovim has no built-in equivalent.
+  { src = "https://github.com/windwp/nvim-autopairs" },
+
   -- Formatter dispatch on save, with an LSP fallback. Replaces the hand-rolled
   -- BufWritePre autocmd this config used to carry.
   { src = "https://github.com/stevearc/conform.nvim" },
@@ -55,5 +58,6 @@ require("plugins.supermaven")
 require("plugins.devicons")
 require("plugins.oil")
 require("plugins.quicker")
+require("plugins.autopairs")
 require("plugins.conform")
 require("plugins.harpoon")
