@@ -49,40 +49,62 @@ local function derived_palette()
   }
 end
 
--- rose-pine loads as "rose-pine" plus one colorscheme per variant. Its palette
--- module reads whichever variant is configured, so it needs no argument.
-local rose_pine_variants = {
-  ["rose-pine"] = true,
-  ["rose-pine-main"] = true,
-  ["rose-pine-moon"] = true,
-  ["rose-pine-dawn"] = true,
-}
+-- Per-colorscheme palette readers, keyed by the name the scheme sets in
+-- vim.g.colors_name. Each returns the accent set the highlight groups below
+-- are built from. Gating on the *active* name rather than on whether a module
+-- happens to be requireable matters: both plugins stay installed, so either
+-- module resolves at any time.
+local readers = {}
+
+local function rose_pine()
+  local ok, p = pcall(require, "rose-pine.palette")
+  if not ok then
+    return nil
+  end
+  return {
+    bg = p.base,
+    fg = p.text,
+    blue = p.foam,
+    green = p.leaf,
+    magenta = p.iris,
+    violet = p.rose,
+    red = p.love,
+    orange = p.gold,
+    cyan = p.pine,
+    base00 = p.muted,
+    base01 = p.subtle,
+  }
+end
+
+for _, name in ipairs({ "rose-pine", "rose-pine-main", "rose-pine-moon", "rose-pine-dawn" }) do
+  readers[name] = rose_pine
+end
+
+readers["monokai-nightasty"] = function()
+  local ok, p = pcall(require, "monokai-nightasty.colors.dark")
+  if not ok then
+    return nil
+  end
+  return {
+    -- The buffer background is transparent, so the mode chip takes its
+    -- foreground from the opaque dark background instead.
+    bg = p.bg_dark,
+    fg = p.fg,
+    blue = p.blue,
+    green = p.green,
+    magenta = p.magenta,
+    violet = p.purple,
+    red = p.red,
+    orange = p.orange,
+    cyan = p.blue_alt,
+    base00 = p.grey,
+    base01 = p.grey_medium,
+  }
+end
 
 local function palette()
-  -- Gate on the *active* colorscheme, not on whether the module happens to be
-  -- loadable: rose-pine.palette resolves whenever the plugin is installed, so
-  -- requiring it blindly would keep its palette after a switch to some other
-  -- theme.
-  local name = vim.g.colors_name
-  if name and rose_pine_variants[name] then
-    local ok, p = pcall(require, "rose-pine.palette")
-    if ok then
-      return {
-        bg = p.base,
-        fg = p.text,
-        blue = p.foam,
-        green = p.leaf,
-        magenta = p.iris,
-        violet = p.rose,
-        red = p.love,
-        orange = p.gold,
-        cyan = p.pine,
-        base00 = p.muted,
-        base01 = p.subtle,
-      }
-    end
-  end
-  return derived_palette()
+  local reader = vim.g.colors_name and readers[vim.g.colors_name]
+  return (reader and reader()) or derived_palette()
 end
 
 local function set_highlights()

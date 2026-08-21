@@ -47,9 +47,12 @@ Eleven, all either without a native equivalent or required to install one:
   only c/lua/markdown/query/vim/vimdoc. Highlighting starts on `FileType`, and
   a filetype whose parser is missing but buildable is installed on the spot.
   Folds come from the tree (`foldexpr`, see `lua/options.lua`).
-- `rose-pine` — colorscheme. `lua/colorscheme.lua` activates the `moon`
-  variant; `main` and the light `dawn` are one word away, and the statusline
-  follows whichever is active.
+- `monokai-nightasty.nvim` — colorscheme, active. Dark style with a
+  transparent background; floats and sidebars stay opaque. There is no
+  "vibrant" variant in this plugin.
+- `rose-pine` — colorscheme, installed but not active. Swap the
+  `vim.cmd.colorscheme` call in `lua/colorscheme.lua`; the statusline reads
+  whichever is live.
 - `gitsigns.nvim` — sign-column git hunks
 - `supermaven-nvim` — AI inline completion
 - `nvim-web-devicons` — filetype glyphs for oil's icon column and the
