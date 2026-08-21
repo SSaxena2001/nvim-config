@@ -8,10 +8,11 @@
 require("mason").setup()
 
 require("mason-tool-installer").setup({
+  -- tsc is not here: TypeScript 7 comes from the project's own node_modules or
+  -- a global npm/mise install, not from mason.
   ensure_installed = {
     -- Language servers
     "lua-language-server",
-    "tsgo",
     "html-lsp",
     "css-lsp",
     "json-lsp",

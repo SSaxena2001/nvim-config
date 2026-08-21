@@ -89,9 +89,32 @@ vim.lsp.config("emmet_ls", {
   },
 })
 
--- tsgo: Microsoft's native TypeScript/JavaScript language server.
-vim.lsp.config("tsgo", {
-  cmd = { "tsgo", "--lsp", "--stdio" },
+-- TypeScript 7 -- the native compiler, formerly shipped as the `tsgo`
+-- preview -- serves the language server from the same binary as the compiler.
+vim.lsp.config("tsc", {
+  -- Prefer the TypeScript the project itself depends on, so the language
+  -- server matches what its build uses -- but only when that copy is new
+  -- enough to be one. The language server arrived in TypeScript 7; a 5.x or
+  -- 6.x `tsc` answers `--lsp` with "Unknown compiler option" and exits 1,
+  -- which Neovim reports only as the client quitting. Most projects still pin
+  -- 5.x, so this check is what keeps them working.
+  cmd = function(dispatchers, config)
+    local bin = "tsc"
+
+    local root = (config or {}).root_dir
+    if root then
+      local local_bin = vim.fs.joinpath(root, "node_modules", ".bin", "tsc")
+      if vim.fn.executable(local_bin) == 1 then
+        local out = vim.system({ local_bin, "--version" }, { text = true }):wait(5000)
+        local major = out.code == 0 and tonumber((out.stdout or ""):match("Version (%d+)"))
+        if major and major >= 7 then
+          bin = local_bin
+        end
+      end
+    end
+
+    return vim.lsp.rpc.start({ bin, "--lsp", "--stdio" }, dispatchers)
+  end,
   on_attach = on_attach_disable_semantic_tokens,
   filetypes = {
     "javascript",

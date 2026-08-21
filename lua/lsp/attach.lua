@@ -99,7 +99,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
       local organize_imports_kind = "source.organizeImports"
       local fix_all_kind = "source.fixAll"
 
-      if client.name == "tsgo" then
+      if client.name == "tsc" then
         organize_imports_kind = "source.organizeImports.ts"
         fix_all_kind = "source.fixAll.ts"
       end

@@ -23,7 +23,7 @@ vim.lsp.enable({
   "cssls",
   "html",
   "emmet_ls",
-  "tsgo",
+  "tsc",
   "jsonls",
   "pyright",
   "ruff",
