@@ -35,10 +35,6 @@
       "rev": "2ae6958df7ced50baac5035cec0c15799eedfbf7",
       "src": "https://github.com/nvim-tree/nvim-web-devicons"
     },
-    "oh-my-monokai.nvim": {
-      "rev": "26bc4844fe7f4cad1c6f9fab43a7fe997a8f8621",
-      "src": "https://github.com/justinsgithub/oh-my-monokai.nvim"
-    },
     "oil.nvim": {
       "rev": "b73018b75affd13fa38e2fc94ef753b465f770d7",
       "src": "https://github.com/stevearc/oil.nvim"

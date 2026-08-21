@@ -47,21 +47,9 @@ Eleven, all either without a native equivalent or required to install one:
   only c/lua/markdown/query/vim/vimdoc. Highlighting starts on `FileType`, and
   a filetype whose parser is missing but buildable is installed on the spot.
   Folds come from the tree (`foldexpr`, see `lua/options.lua`).
-- `oh-my-monokai.nvim` — colorscheme, active. The Neovim answer to the
-  Monokai Vibrant VS Code theme, which it credits as its inspiration and which
-  has no Neovim port of its own. Transparent background, opaque floats.
-- `rose-pine` — colorscheme, installed but not active. Swap the
-  `vim.cmd.colorscheme` call in `lua/colorscheme.lua`; the statusline reads
-  whichever is live.
-- `gitsigns.nvim` — sign-column git hunks
-- `supermaven-nvim` — AI inline completion
-- `nvim-web-devicons` — filetype glyphs for oil's icon column and the
-  statusline. Needs a Nerd Font in the terminal.
-- `oil.nvim` — the file explorer as an editable buffer. Registered as the
-  default file explorer, so `nvim .` and `:e src/` open it. `-` walks to the
-  parent directory, `<leader>e` opens a float. netrw is not configured.
-- `quicker.nvim` — quickfix styling, context lines (`>` / `<` inside the
-  quickfix window) and an editable quickfix buffer
+- `rose-pine` — colorscheme. `lua/colorscheme.lua` activates the `moon`
+  variant; `main` and the light `dawn` are one word away, and the statusline
+  follows whichever is active.
 - `conform.nvim` — formatter dispatch on save, with an LSP fallback
 - `harpoon` (branch `harpoon2`) + `plenary.nvim` — pinned files, jumped to by
   index

@@ -80,28 +80,6 @@ for _, name in ipairs({ "rose-pine", "rose-pine-main", "rose-pine-moon", "rose-p
   readers[name] = rose_pine
 end
 
-readers["oh-my-monokai"] = function()
-  local ok, p = pcall(require, "oh-my-monokai.colorscheme.palette.default")
-  if not ok then
-    return nil
-  end
-  return {
-    -- The buffer background is transparent, so the mode chip takes its
-    -- foreground from the palette's opaque dark instead.
-    bg = p.dark,
-    fg = p.text,
-    blue = p.sky,
-    green = p.green,
-    magenta = p.magenta,
-    violet = p.purple,
-    red = p.red,
-    orange = p.orange,
-    cyan = p.cyan,
-    base00 = p.dimmed3,
-    base01 = p.dimmed2,
-  }
-end
-
 local function palette()
   local reader = vim.g.colors_name and readers[vim.g.colors_name]
   return (reader and reader()) or derived_palette()
