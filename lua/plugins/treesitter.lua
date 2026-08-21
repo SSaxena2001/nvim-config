@@ -34,6 +34,41 @@ local parsers = {
 
 local ts = require("nvim-treesitter")
 
+-- nvim-treesitter symlinks each language's query directory from
+-- stdpath("data")/site/queries into its own runtime/queries. Those links are
+-- written with the plugin's path at install time, so moving the plugin --
+-- switching plugin managers, say -- leaves them dangling. A dangling link is
+-- silent: the parser still loads and highlighting still "works", but every
+-- capture from that query file disappears. Losing `ecma` this way strips
+-- TypeScript and JavaScript of keywords, functions and strings while leaving
+-- the type captures behind, since those come from typescript's own file.
+--
+-- Repoint anything dangling at the plugin as it is installed now.
+local function repair_query_links()
+  local site = vim.fs.joinpath(vim.fn.stdpath("data"), "site", "queries")
+  if vim.fn.isdirectory(site) == 0 then
+    return
+  end
+
+  local runtime =
+    vim.fs.joinpath(vim.fn.stdpath("data"), "site", "pack", "core", "opt", "nvim-treesitter", "runtime", "queries")
+
+  for name, kind in vim.fs.dir(site) do
+    if kind == "link" then
+      local link = vim.fs.joinpath(site, name)
+      if vim.uv.fs_stat(link) == nil then
+        local target = vim.fs.joinpath(runtime, name)
+        if vim.fn.isdirectory(target) == 1 then
+          vim.uv.fs_unlink(link)
+          vim.uv.fs_symlink(target, link, { dir = true })
+        end
+      end
+    end
+  end
+end
+
+repair_query_links()
+
 -- What is already built, as a set. nvim-treesitter installs into
 -- stdpath("data")/site/parser, which is on the runtimepath.
 local installed = {}
