@@ -1,7 +1,7 @@
 -- Per-server configuration. Every server is declared here with
 -- `vim.lsp.config`; the enable list lives in configs/lsp/init.lua.
-local util = require("acurite.lsp.util")
-local capabilities = require("acurite.lsp.capabilities")
+local util = require("lsp.util")
+local capabilities = require("lsp.capabilities")
 
 local on_attach_disable_semantic_tokens = util.on_attach_disable_semantic_tokens
 
@@ -358,7 +358,24 @@ vim.lsp.config("astro", {
 
   init_options = {
     typescript = {
-      tsdk = vim.fn.stdpath("data") .. "/mason/packages/astro-language-server/node_modules/typescript/lib",
+      -- astro-ls needs a TypeScript install to borrow. Prefer the project's
+      -- own copy, then whatever `tsc` is on $PATH (npm -g), so this no longer
+      -- depends on mason having unpacked the server.
+      tsdk = (function()
+        local local_tsdk = vim.fs.joinpath(vim.fn.getcwd(), "node_modules", "typescript", "lib")
+        if vim.fn.isdirectory(local_tsdk) == 1 then
+          return local_tsdk
+        end
+        local tsc = vim.fn.exepath("tsc")
+        if tsc ~= "" then
+          local resolved = vim.fn.resolve(tsc)
+          local lib = vim.fs.joinpath(vim.fs.dirname(vim.fs.dirname(resolved)), "lib")
+          if vim.fn.isdirectory(lib) == 1 then
+            return lib
+          end
+        end
+        return nil
+      end)(),
     },
   },
 })

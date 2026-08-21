@@ -1,1 +1,15 @@
-require("acurite")
+vim.g.mapleader = " "
+
+require("options")
+require("pack")
+require("colorscheme")
+require("lsp")
+require("netrw")
+require("netrw-help")
+require("statusline")
+require("find")
+require("grep")
+require("autocommands")
+require("formatting")
+require("lazygit")
+require("keymaps")

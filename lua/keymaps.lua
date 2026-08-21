@@ -1,5 +1,6 @@
--- Global keymaps. Plugin-specific bindings live with their plugin in
--- lua/acurite/lazy/.
+-- Global keymaps. Keymaps that only make sense next to a feature live with it:
+-- lua/find.lua, lua/grep.lua, lua/lazygit.lua, lua/lsp/attach.lua,
+-- lua/plugins/treesitter.lua.
 
 local keymap = vim.keymap
 local opts = { noremap = true, silent = true }
@@ -132,10 +133,6 @@ keymap.set("n", "<leader>e", function()
     vim.cmd.enew()
   end
 end, { desc = "File explorer (toggle)" })
-
--- Git --------------------------------------------------------------------
--- lazygit in a float. No plugin: it is a terminal buffer.
-require("acurite.lazygit")
 
 -- tmux -------------------------------------------------------------------
 -- Run tmux-sessionizer in a new tmux window. Deliberately not

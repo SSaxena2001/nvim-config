@@ -1,13 +1,4 @@
--- Options. Based on craftzdog's config, plus the handful of additions worth
--- keeping. Everything that was carrying its own weight elsewhere -- fold
--- settings, wildmenu tuning, completeopt, the JS/TS syntax fallback autocmds,
--- the long filetype table -- has been dropped.
-
-vim.g.mapleader = " "
-
--- Mason installs its binaries here. Servers and formatters are launched by
--- name, so this has to be on $PATH before anything tries to start one.
-vim.env.PATH = vim.fn.stdpath("data") .. "/mason/bin:" .. vim.env.PATH
+-- Options. Everything Neovim can do without a plugin is turned on here.
 
 vim.opt.encoding = "utf-8"
 vim.opt.fileencoding = "utf-8"
@@ -37,6 +28,10 @@ vim.opt.swapfile = false
 vim.opt.undofile = true
 vim.opt.undodir = vim.fn.stdpath("data") .. "/undodir"
 vim.opt.backupskip = { "/tmp/*", "/private/tmp/*" }
+
+-- Reload a buffer when the file changed underneath it and Neovim has no
+-- unsaved edits of its own.
+vim.opt.autoread = true
 
 -- "split" opens a preview window listing every match while a :s command is
 -- being typed. This is the live substitution preview.

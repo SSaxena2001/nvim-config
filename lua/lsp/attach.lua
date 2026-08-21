@@ -119,7 +119,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
 
     if supports("workspace/willRenameFiles") then
       map("n", "<leader>lR", function()
-        require("acurite.lsp.file-rename").rename_current_file()
+        require("lsp.file-rename").rename_current_file()
       end, "Rename File")
     end
 
