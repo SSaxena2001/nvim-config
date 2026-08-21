@@ -1,16 +1,16 @@
 -- Diagnostic presentation.
 --
--- The gutter glyphs are the same codicons the statusline counts with, so a
--- severity looks the same wherever it appears. signcolumn is "yes:2" (see
--- lua/options.lua) so these and gitsigns' hunk markers each get a column
--- instead of the higher-priority one hiding the other.
+-- Gutter signs are Neovim's own letters -- E, W, I and N -- which is what
+-- ThePrimeagen's config shows, since it sets no sign text and takes the
+-- defaults. Spelled out here rather than left implicit so the gutter and the
+-- statusline counts are visibly the same set. Note HINT defaults to N, not H.
 vim.diagnostic.config({
   signs = {
     text = {
-      [vim.diagnostic.severity.ERROR] = "",
-      [vim.diagnostic.severity.WARN] = "",
-      [vim.diagnostic.severity.INFO] = "",
-      [vim.diagnostic.severity.HINT] = "",
+      [vim.diagnostic.severity.ERROR] = "E",
+      [vim.diagnostic.severity.WARN] = "W",
+      [vim.diagnostic.severity.INFO] = "I",
+      [vim.diagnostic.severity.HINT] = "N",
     },
   },
   float = {
