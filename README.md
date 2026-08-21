@@ -12,25 +12,48 @@ no built-in equivalent are installed by `vim.pack` (Neovim 0.12+).
 | `init.lua` | Module load order |
 | `lua/options.lua` | `vim.opt` settings |
 | `lua/keymaps.lua` | Global keymaps |
+| `lua/picker.lua` | The `;` prefix — what telescope used to cover |
 | `lua/pack.lua` | `vim.pack.add` plugin list |
 | `lua/plugins/` | Per-plugin setup |
 | `lua/lsp/` | Native LSP: server configs, attach keymaps, diagnostics |
-| `lua/find.lua` | `:find` via `findfunc` + `matchfuzzy` (replaces telescope) |
-| `lua/grep.lua` | `grepprg=rg` into quickfix (replaces live_grep) |
+| `lua/find.lua` | `findfunc` for `:find`, backed by ripgrep |
+| `lua/grep.lua` | `grepprg=rg`, `grepformat` |
 | `lua/statusline.lua` | Hand-rolled statusline |
 | `lua/formatting.lua` | `BufWritePre` shell formatter, LSP fallback |
-| `lua/netrw.lua` | netrw settings |
 | `lua/lazygit.lua` | lazygit in a terminal tab |
+
+## Pickers
+
+The `;` prefix, rebuilt on `:find`, `:grep`, the quickfix list and the LSP
+handlers. quicker.nvim styles the quickfix window most of them land in.
+
+| Key | What |
+|---|---|
+| `;f` | Find files — project root, hidden included |
+| `;P` | Find a file in this config |
+| `;r` | Grep for a pattern |
+| `;w` | Grep the word under the cursor, or the visual selection |
+| `;g` | Files changed against HEAD, plus untracked |
+| `;t` | Help tags |
+| `;;` | Reopen the last quickfix list |
+| `;e` | Every diagnostic in the workspace |
+| `;s` | Document symbols |
+| `\` | Buffers |
 
 ## Plugins
 
-Six, all either without a native equivalent or required to install one:
+Eight, all either without a native equivalent or required to install one:
 
 - `nvim-treesitter` + `nvim-treesitter-textobjects` — Neovim ships parsers for
   only c/lua/markdown/query/vim/vimdoc
 - `solarized-osaka.nvim` — colorscheme
 - `gitsigns.nvim` — sign-column git hunks
 - `supermaven-nvim` — AI inline completion
+- `oil.nvim` — the file explorer as an editable buffer. Registered as the
+  default file explorer, so `nvim .` and `:e src/` open it. `-` walks to the
+  parent directory, `<leader>e` opens a float. netrw is not configured.
+- `quicker.nvim` — quickfix styling, context lines (`>` / `<` inside the
+  quickfix window) and an editable quickfix buffer
 - `mason.nvim` + `mason-tool-installer.nvim` — installs the language server and
   formatter binaries. Not an LSP layer: `vim.lsp.config`/`vim.lsp.enable` do
   that, and there is no nvim-lspconfig or mason-lspconfig.

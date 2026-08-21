@@ -46,9 +46,10 @@ keymap.set("i", "<C-c>", "<Esc>")
 -- Ex mode is never what anyone wants.
 keymap.set("n", "Q", "<nop>")
 
--- Increment/decrement
+-- Increment/decrement. `-` belongs to oil (open parent directory), so
+-- decrement moves one key over.
 keymap.set("n", "+", "<C-a>")
-keymap.set("n", "-", "<C-x>")
+keymap.set("n", "<Leader>-", "<C-x>")
 
 -- Delete a word backwards
 keymap.set("n", "dw", 'vb"_d')
@@ -85,6 +86,10 @@ keymap.set("n", "<C-w><down>", "<C-w>-")
 -- Quickfix ---------------------------------------------------------------
 keymap.set("n", "[q", vim.cmd.cprev, { desc = "Previous quickfix item" })
 keymap.set("n", "]q", vim.cmd.cnext, { desc = "Next quickfix item" })
+
+keymap.set("n", "<leader>q", function()
+  require("quicker").toggle()
+end, { desc = "Toggle quickfix" })
 
 -- Diagnostics ------------------------------------------------------------
 local diagnostic_float_opts = {
@@ -125,10 +130,15 @@ keymap.set("n", "<leader>i", function()
 end, { desc = "Toggle inlay hints" })
 
 -- File explorer ----------------------------------------------------------
--- :Lexplore is a toggle: it opens netrw in a fixed-width left split and closes
--- that split when pressed again. netrw_winsize and netrw_browse_split are set
--- for this in lua/netrw.lua.
-keymap.set("n", "<leader>e", ":Lexplore<cr>", { silent = true, desc = "File explorer" })
+-- oil edits a directory as a buffer. `-` walks to the parent directory, which
+-- is the usual way in; <leader>e opens the same thing in a float. netrw is
+-- gone -- oil is registered as the default file explorer in
+-- lua/plugins/oil.lua, so `nvim .` and `:e src/` open it too.
+keymap.set("n", "-", "<cmd>Oil<cr>", { desc = "Open parent directory" })
+
+keymap.set("n", "<leader>e", function()
+  require("oil").toggle_float()
+end, { desc = "File explorer (float)" })
 
 -- tmux -------------------------------------------------------------------
 -- Run tmux-sessionizer in a new tmux window. Deliberately not

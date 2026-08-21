@@ -24,6 +24,14 @@ vim.pack.add({
   -- see lua/plugins/mason.lua.
   { src = "https://github.com/mason-org/mason.nvim" },
   { src = "https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim" },
+
+  -- File explorer as an editable buffer. Replaces netrw.
+  { src = "https://github.com/stevearc/oil.nvim" },
+
+  -- Quickfix styling, context lines and an editable quickfix buffer. This
+  -- config routes grep, diagnostics and symbols through the quickfix list, so
+  -- it is the window most of the pickers land in.
+  { src = "https://github.com/stevearc/quicker.nvim" },
 })
 
 -- Mason first: it puts the server binaries on $PATH that lua/lsp/ launches.
@@ -31,3 +39,5 @@ require("plugins.mason")
 require("plugins.treesitter")
 require("plugins.gitsigns")
 require("plugins.supermaven")
+require("plugins.oil")
+require("plugins.quicker")
