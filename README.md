@@ -24,21 +24,25 @@ no built-in equivalent are installed by `vim.pack` (Neovim 0.12+).
 
 ## Plugins
 
-Four, all with no native equivalent:
+Six, all either without a native equivalent or required to install one:
 
 - `nvim-treesitter` + `nvim-treesitter-textobjects` — Neovim ships parsers for
   only c/lua/markdown/query/vim/vimdoc
 - `solarized-osaka.nvim` — colorscheme
 - `gitsigns.nvim` — sign-column git hunks
 - `supermaven-nvim` — AI inline completion
+- `mason.nvim` + `mason-tool-installer.nvim` — installs the language server and
+  formatter binaries. Not an LSP layer: `vim.lsp.config`/`vim.lsp.enable` do
+  that, and there is no nvim-lspconfig or mason-lspconfig.
 
 ## External binaries
 
-Language servers are launched by name off `$PATH`; there is no mason.
+Servers and formatters are installed by mason on first launch (see
+`lua/plugins/mason.lua`) into `stdpath("data")/mason/bin`, which
+`lua/options.lua` prepends to `$PATH`. `:Mason` opens the UI.
+
+Not covered by mason, install these yourself:
 
 ```
-brew install lua-language-server gopls marksman llvm ripgrep lazygit stylua
-npm i -g @typescript/native-preview vscode-langservers-extracted emmet-ls \
-         @astrojs/language-server pyright prettier
-uv tool install ruff
+brew install ripgrep lazygit
 ```

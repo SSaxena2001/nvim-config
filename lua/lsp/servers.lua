@@ -359,22 +359,14 @@ vim.lsp.config("astro", {
   init_options = {
     typescript = {
       -- astro-ls needs a TypeScript install to borrow. Prefer the project's
-      -- own copy, then whatever `tsc` is on $PATH (npm -g), so this no longer
-      -- depends on mason having unpacked the server.
+      -- own copy so a monorepo pins its own version, then fall back to the one
+      -- mason unpacked alongside the server.
       tsdk = (function()
         local local_tsdk = vim.fs.joinpath(vim.fn.getcwd(), "node_modules", "typescript", "lib")
         if vim.fn.isdirectory(local_tsdk) == 1 then
           return local_tsdk
         end
-        local tsc = vim.fn.exepath("tsc")
-        if tsc ~= "" then
-          local resolved = vim.fn.resolve(tsc)
-          local lib = vim.fs.joinpath(vim.fs.dirname(vim.fs.dirname(resolved)), "lib")
-          if vim.fn.isdirectory(lib) == 1 then
-            return lib
-          end
-        end
-        return nil
+        return vim.fn.stdpath("data") .. "/mason/packages/astro-language-server/node_modules/typescript/lib"
       end)(),
     },
   },

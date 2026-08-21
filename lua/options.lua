@@ -1,5 +1,9 @@
 -- Options. Everything Neovim can do without a plugin is turned on here.
 
+-- Mason installs its binaries here. Servers and formatters are launched by
+-- name, so this has to be on $PATH before anything tries to start one.
+vim.env.PATH = vim.fn.stdpath("data") .. "/mason/bin:" .. vim.env.PATH
+
 vim.opt.encoding = "utf-8"
 vim.opt.fileencoding = "utf-8"
 

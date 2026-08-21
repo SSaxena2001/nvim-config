@@ -15,12 +15,9 @@ vim.lsp.config("*", {
 
 require("lsp.servers")
 
--- Servers are launched by name off $PATH. mason is gone, so install them with
--- the system package manager:
---   brew install lua-language-server gopls marksman llvm
---   npm i -g @typescript/native-preview vscode-langservers-extracted \
---            emmet-ls @astrojs/language-server pyright
---   uv tool install ruff
+-- Servers are launched by name off $PATH. mason installs the binaries and
+-- lua/options.lua puts its bin directory on $PATH; the install list lives in
+-- lua/plugins/mason.lua.
 vim.lsp.enable({
   "lua_ls",
   "cssls",

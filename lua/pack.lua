@@ -19,8 +19,15 @@ vim.pack.add({
 
   -- AI inline completion. No native equivalent.
   { src = "https://github.com/supermaven-inc/supermaven-nvim" },
+
+  -- Installer for language server and formatter binaries. Not an LSP layer:
+  -- see lua/plugins/mason.lua.
+  { src = "https://github.com/mason-org/mason.nvim" },
+  { src = "https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim" },
 })
 
+-- Mason first: it puts the server binaries on $PATH that lua/lsp/ launches.
+require("plugins.mason")
 require("plugins.treesitter")
 require("plugins.gitsigns")
 require("plugins.supermaven")
