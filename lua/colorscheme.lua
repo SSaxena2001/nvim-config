@@ -13,9 +13,12 @@ require("rose-pine").setup({
   styles = {
     -- Let the terminal's own background through.
     transparency = true,
+    italic = false,
   },
 
   highlight_groups = {
+    ["Normal"] = { bg = "none" },
+    ["NormalFloat"] = { bg = "surface" },
     ["@markup.italic"] = { italic = true },
     -- Make and/or/not stand out more
     ["@keyword.operator"] = { link = "@keyword" },

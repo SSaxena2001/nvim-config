@@ -16,7 +16,7 @@ no built-in equivalent are installed by `vim.pack` (Neovim 0.12+).
 | `lua/pack.lua` | `vim.pack.add` plugin list |
 | `lua/plugins/` | Per-plugin setup |
 | `lua/lsp/` | Native LSP: server configs, attach keymaps, diagnostics |
-| `lua/find.lua` | `findfunc` for `:find`, backed by ripgrep |
+| `lua/find.lua` | `findfunc` for `:find`, backed by ripgrep; honours `.gitignore` and skips build output |
 | `lua/grep.lua` | `grepprg=rg`, `grepformat` |
 | `lua/statusline.lua` | Hand-rolled statusline, coloured from the active theme's palette |
 | `lua/lazygit.lua` | lazygit in a terminal tab |

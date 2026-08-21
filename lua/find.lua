@@ -23,37 +23,68 @@ function M.project_root()
   return vim.fs.root(0, root_markers) or vim.fn.getcwd()
 end
 
-local fallback_ignore = { "node_modules", "%.git", "%.cache", "dist", "build", "%.tmp", "%.log" }
+-- Directories never worth completing over, whether or not the project thinks
+-- to gitignore them. `.zig-cache`/`zig-out` are Zig's build output; `zig-cache`
+-- is what older Zig called it. Note this is about directories -- .zig source
+-- files are still found.
+local always_ignore = {
+  ".git",
+  "node_modules",
+  ".zig-cache",
+  "zig-cache",
+  "zig-out",
+}
+
+local function rg_command()
+  local args = {
+    "rg",
+    "--files",
+    "--hidden",
+    -- ripgrep only applies .gitignore when it detects a git repository. Without
+    -- this, a directory that is not a repo -- a scratch project, a worktree
+    -- checked out elsewhere, anything before `git init` -- has its ignore file
+    -- silently disregarded and completion fills up with node_modules.
+    "--no-require-git",
+  }
+
+  for _, dir in ipairs(always_ignore) do
+    args[#args + 1] = "--glob"
+    args[#args + 1] = "!**/" .. dir .. "/**"
+  end
+
+  return args
+end
+
+local function fallback_ignored(path)
+  for _, dir in ipairs(always_ignore) do
+    if path:find("/" .. dir .. "/", 1, true) or vim.startswith(path, dir .. "/") then
+      return true
+    end
+  end
+  -- Without ripgrep there is no .gitignore handling; these are the leftovers
+  -- that matter most in practice.
+  for _, pat in ipairs({ "/dist/", "/build/", "/%.cache/", "%.tmp$", "%.log$" }) do
+    if path:match(pat) then
+      return true
+    end
+  end
+  return false
+end
 
 local function candidates(root)
   if vim.fn.executable("rg") == 1 then
-    local out = vim
-      .system({
-        "rg",
-        "--files",
-        "--hidden",
-        "--glob",
-        "!.git/*",
-      }, { cwd = root, text = true })
-      :wait()
-
+    local out = vim.system(rg_command(), { cwd = root, text = true }):wait()
     if out.code == 0 then
       return vim.split(out.stdout, "\n", { trimempty = true })
     end
   end
 
   local files = {}
-  for _, f in ipairs(vim.fn.glob(root .. "/**/*", true, true)) do
-    if vim.fn.isdirectory(f) == 0 then
-      local skip = false
-      for _, pat in ipairs(fallback_ignore) do
-        if f:match(pat) then
-          skip = true
-          break
-        end
-      end
-      if not skip then
-        files[#files + 1] = f
+  for _, abs in ipairs(vim.fn.glob(root .. "/**/*", true, true)) do
+    if vim.fn.isdirectory(abs) == 0 then
+      local rel = abs:sub(#root + 2)
+      if not fallback_ignored(rel) then
+        files[#files + 1] = rel
       end
     end
   end
