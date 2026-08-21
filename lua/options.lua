@@ -56,7 +56,12 @@ vim.opt.splitkeep = "cursor"
 vim.opt.clipboard:append("unnamedplus")
 vim.opt.mouse = ""
 vim.opt.updatetime = 50
-vim.opt.shell = "fish"
+
+-- Deliberately no `shell` override. Neovim defaults it to $SHELL, which is the
+-- login shell (zsh), and 'shell' is what :!, :terminal, system() and grepprg
+-- all run through -- so it wants to stay POSIX-compatible and to follow the
+-- shell actually in use rather than being pinned to one.
+
 vim.opt.laststatus = 3
 vim.opt.cmdheight = 0
 
