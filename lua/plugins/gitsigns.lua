@@ -1,5 +1,6 @@
--- Diagnostic signs are off (see lua/lsp/diagnostics.lua), so the sign column
--- stays dedicated to git changes.
+-- Git hunks share the sign column with the diagnostic letters set in
+-- lua/lsp/diagnostics.lua, which is why lua/options.lua asks for
+-- `signcolumn = "yes:2"` -- one column each, so neither hides the other.
 require("gitsigns").setup({
   signs = {
     add = { text = "+" },

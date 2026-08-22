@@ -2,18 +2,20 @@
 -- plugin manager here: vim.pack clones each repo into the site packpath and
 -- Neovim's own `packadd` loads it. `:h vim.pack`
 --
--- Only plugins with no native equivalent live here. Everything else -- fuzzy
--- file finding, grep, completion, LSP, statusline, formatting, the file
--- explorer -- is handled by Neovim itself in the modules beside this one.
+-- Plugins earn their place by doing something Neovim cannot, or by doing it
+-- far better. Everything else -- completion, LSP, the statusline, `:find` and
+-- `:grep` themselves -- is handled by Neovim in the modules beside this one.
 vim.pack.add({
   -- Neovim ships parsers for c, lua, markdown, query, vim and vimdoc only.
   -- Every other language needs nvim-treesitter to fetch and build one.
   { src = "https://github.com/nvim-treesitter/nvim-treesitter", version = "main" },
   { src = "https://github.com/nvim-treesitter/nvim-treesitter-textobjects", version = "main" },
 
-  -- Colorscheme. `name` is set because the repo is called "neovim", which
-  -- would otherwise be the plugin's directory and require() name.
+  -- Colorschemes. rose-pine's `name` is set because the repo is called
+  -- "neovim", which would otherwise be the plugin's directory and require()
+  -- name. Both stay installed; lua/colorscheme.lua picks which one is active.
   { src = "https://github.com/rose-pine/neovim", name = "rose-pine" },
+  { src = "https://github.com/vague2k/vague.nvim" },
 
   -- Sign-column git hunks. No native equivalent.
   { src = "https://github.com/lewis6991/gitsigns.nvim" },
@@ -44,6 +46,16 @@ vim.pack.add({
   -- File explorer as an editable buffer. Replaces netrw.
   { src = "https://github.com/stevearc/oil.nvim" },
 
+  -- Fuzzy picker. Matching runs in the fzf binary and the file/grep providers
+  -- run in a separate Neovim process, so it stays responsive where an
+  -- in-process Lua matcher would not. Sits on top of the native layer rather
+  -- than replacing it: see lua/picker.lua.
+  { src = "https://github.com/ibhagwan/fzf-lua" },
+
+  -- Popup listing what a half-typed prefix can still become. Neovim has no
+  -- equivalent; the `desc` on every keymap here is what it reads.
+  { src = "https://github.com/folke/which-key.nvim" },
+
   -- Quickfix styling, context lines and an editable quickfix buffer. This
   -- config routes grep, diagnostics and symbols through the quickfix list, so
   -- it is the window most of the pickers land in.
@@ -58,6 +70,8 @@ require("plugins.supermaven")
 require("plugins.devicons")
 require("plugins.oil")
 require("plugins.quicker")
+require("plugins.fzf")
 require("plugins.autopairs")
 require("plugins.conform")
 require("plugins.harpoon")
+require("plugins.which-key")

@@ -1,3 +1,5 @@
+-- Neovim ships parsers for c, lua, markdown, query, vim and vimdoc only.
+-- Everything else is built here.
 local parsers = {
   "astro",
   "bash",
@@ -34,43 +36,6 @@ local parsers = {
 
 local ts = require("nvim-treesitter")
 
--- nvim-treesitter symlinks each language's query directory from
--- stdpath("data")/site/queries into its own runtime/queries. Those links are
--- written with the plugin's path at install time, so moving the plugin --
--- switching plugin managers, say -- leaves them dangling. A dangling link is
--- silent: the parser still loads and highlighting still "works", but every
--- capture from that query file disappears. Losing `ecma` this way strips
--- TypeScript and JavaScript of keywords, functions and strings while leaving
--- the type captures behind, since those come from typescript's own file.
---
--- Repoint anything dangling at the plugin as it is installed now.
-local function repair_query_links()
-  local site = vim.fs.joinpath(vim.fn.stdpath("data"), "site", "queries")
-  if vim.fn.isdirectory(site) == 0 then
-    return
-  end
-
-  local runtime =
-    vim.fs.joinpath(vim.fn.stdpath("data"), "site", "pack", "core", "opt", "nvim-treesitter", "runtime", "queries")
-
-  for name, kind in vim.fs.dir(site) do
-    if kind == "link" then
-      local link = vim.fs.joinpath(site, name)
-      if vim.uv.fs_stat(link) == nil then
-        local target = vim.fs.joinpath(runtime, name)
-        if vim.fn.isdirectory(target) == 1 then
-          vim.uv.fs_unlink(link)
-          vim.uv.fs_symlink(target, link, { dir = true })
-        end
-      end
-    end
-  end
-end
-
-repair_query_links()
-
--- What is already built, as a set. nvim-treesitter installs into
--- stdpath("data")/site/parser, which is on the runtimepath.
 local installed = {}
 for _, lang in ipairs(ts.get_installed("parsers")) do
   installed[lang] = true
@@ -86,20 +51,6 @@ if #missing > 0 then
   ts.install(missing)
 end
 
--- Languages that can be built but are not in the list above. Checked once so a
--- filetype nobody anticipated still gets highlighted rather than silently
--- falling back to Vim's regex syntax.
-local available = {}
-for _, lang in ipairs(ts.get_available()) do
-  available[lang] = true
-end
-
-local function start(buf, lang)
-  -- A parser whose .so predates its queries raises at highlight time rather
-  -- than returning an error, so guard the whole thing.
-  pcall(vim.treesitter.start, buf, lang)
-end
-
 vim.api.nvim_create_autocmd("FileType", {
   group = vim.api.nvim_create_augroup("Treesitter", { clear = true }),
   desc = "Start treesitter highlighting",
@@ -107,31 +58,12 @@ vim.api.nvim_create_autocmd("FileType", {
     if vim.bo[args.buf].buftype ~= "" then
       return
     end
-
     local lang = vim.treesitter.language.get_lang(vim.bo[args.buf].filetype)
-    if not lang then
-      return
+    -- A parser whose .so predates its queries raises at highlight time rather
+    -- than returning an error, so guard the whole thing.
+    if lang and installed[lang] then
+      pcall(vim.treesitter.start, args.buf, lang)
     end
-
-    if installed[lang] then
-      start(args.buf, lang)
-      return
-    end
-
-    if not available[lang] then
-      return
-    end
-
-    -- Build it now, then highlight when it lands. install() is async, so the
-    -- buffer is already on screen with Vim's syntax highlighting by then.
-    ts.install({ lang }):await(function()
-      installed[lang] = true
-      if vim.api.nvim_buf_is_valid(args.buf) then
-        vim.schedule(function()
-          start(args.buf, lang)
-        end)
-      end
-    end)
   end,
 })
 
@@ -158,11 +90,5 @@ map({ "x", "o" }, "ic", select("@class.inner"), { desc = "Inner class" })
 map({ "x", "o" }, "aa", select("@parameter.outer"), { desc = "Outer argument" })
 map({ "x", "o" }, "ia", select("@parameter.inner"), { desc = "Inner argument" })
 
-map({ "n", "x", "o" }, "]m", move("goto_next_start", "@function.outer"), { desc = "Next function start" })
-map({ "n", "x", "o" }, "[m", move("goto_previous_start", "@function.outer"), { desc = "Prev function start" })
-map({ "n", "x", "o" }, "]M", move("goto_next_end", "@function.outer"), { desc = "Next function end" })
-map({ "n", "x", "o" }, "[M", move("goto_previous_end", "@function.outer"), { desc = "Prev function end" })
-map({ "n", "x", "o" }, "]]", move("goto_next_start", "@class.outer"), { desc = "Next class start" })
-map({ "n", "x", "o" }, "[[", move("goto_previous_start", "@class.outer"), { desc = "Prev class start" })
-map({ "n", "x", "o" }, "][", move("goto_next_end", "@class.outer"), { desc = "Next class end" })
-map({ "n", "x", "o" }, "[]", move("goto_previous_end", "@class.outer"), { desc = "Prev class end" })
+map({ "n", "x", "o" }, "]m", move("goto_next_start", "@function.outer"), { desc = "Next function" })
+map({ "n", "x", "o" }, "[m", move("goto_previous_start", "@function.outer"), { desc = "Prev function" })

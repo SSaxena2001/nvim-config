@@ -1,3 +1,7 @@
+-- Both colorschemes stay installed. Change `active` to switch; each setup()
+-- below is inert until its scheme is the one loaded.
+local active = "rose-pine" -- or "vague"
+
 require("rose-pine").setup({
   -- Moon, matching the palette this config's Ghostty theme has always used.
   -- "main" is darker, "dawn" is the light variant.
@@ -33,4 +37,12 @@ require("rose-pine").setup({
   },
 })
 
-vim.cmd.colorscheme("rose-pine")
+require("vague").setup({
+  -- Matching rose-pine's setup above: let the terminal's background through
+  -- and keep comments upright.
+  transparent = true,
+  italic = false,
+  bold = true,
+})
+
+vim.cmd.colorscheme(active)

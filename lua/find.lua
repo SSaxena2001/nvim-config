@@ -23,11 +23,19 @@ function M.project_root()
   return vim.fs.root(0, root_markers) or vim.fn.getcwd()
 end
 
--- Directories never worth completing over, whether or not the project thinks
--- to gitignore them. `.zig-cache`/`zig-out` are Zig's build output; `zig-cache`
--- is what older Zig called it. Note this is about directories -- .zig source
--- files are still found.
-local always_ignore = {
+-- `.git` is the only directory excluded outright: nothing in it is worth
+-- completing over, and rg will happily walk it once `--hidden` is on.
+--
+-- Everything else is left to .gitignore. That keeps hidden directories the
+-- project actually tracks -- .github, .config, .cargo -- reachable from `:find`
+-- and `;f`, which a blanket "skip dotfiles" rule would hide.
+local always_ignore = { ".git" }
+
+-- The fallback below has no .gitignore handling at all, so it needs its own
+-- list of what would otherwise swamp completion. `.zig-cache`/`zig-out` are
+-- Zig's build output; `zig-cache` is what older Zig called it. Note this is
+-- about directories -- .zig source files are still found.
+local fallback_dirs = {
   ".git",
   "node_modules",
   ".zig-cache",
@@ -35,7 +43,9 @@ local always_ignore = {
   "zig-out",
 }
 
-local function rg_command()
+-- The file list `:find` completes over. lua/plugins/fzf.lua reuses this so
+-- the fzf picker and `:find` see the same set of files.
+function M.rg_command()
   local args = {
     "rg",
     "--files",
@@ -43,7 +53,8 @@ local function rg_command()
     -- ripgrep only applies .gitignore when it detects a git repository. Without
     -- this, a directory that is not a repo -- a scratch project, a worktree
     -- checked out elsewhere, anything before `git init` -- has its ignore file
-    -- silently disregarded and completion fills up with node_modules.
+    -- silently disregarded, and since .gitignore is now the only thing keeping
+    -- build output out of the list, completion fills up with node_modules.
     "--no-require-git",
   }
 
@@ -56,7 +67,7 @@ local function rg_command()
 end
 
 local function fallback_ignored(path)
-  for _, dir in ipairs(always_ignore) do
+  for _, dir in ipairs(fallback_dirs) do
     if path:find("/" .. dir .. "/", 1, true) or vim.startswith(path, dir .. "/") then
       return true
     end
@@ -73,7 +84,7 @@ end
 
 local function candidates(root)
   if vim.fn.executable("rg") == 1 then
-    local out = vim.system(rg_command(), { cwd = root, text = true }):wait()
+    local out = vim.system(M.rg_command(), { cwd = root, text = true }):wait()
     if out.code == 0 then
       return vim.split(out.stdout, "\n", { trimempty = true })
     end
@@ -91,13 +102,8 @@ local function candidates(root)
   return files
 end
 
--- Where `:find` searches. Set to a directory to scope the next completion
--- somewhere other than the project root -- lua/picker.lua uses this for the
--- "find a config file" mapping.
-M.scope = nil
-
 function _G.native_find(text, _)
-  local root = M.scope or M.project_root()
+  local root = M.project_root()
   local cwd = vim.fn.getcwd()
 
   local result = {}

@@ -1,14 +1,12 @@
--- oil.nvim: the file explorer is a normal buffer. Renames, deletes and
--- creations are ordinary text edits applied on :w.
---
+local M = {}
+
 require("oil").setup({
-  -- Take over directory buffers, so `nvim .` and `:e src/` open oil. netrw is
-  -- no longer configured at all.
   default_file_explorer = true,
 
   columns = { "icon" },
 
   win_options = {
+    wrap = false,
     signcolumn = "no",
     cursorcolumn = false,
     foldcolumn = "0",
@@ -21,7 +19,6 @@ require("oil").setup({
   delete_to_trash = true,
   skip_confirm_for_simple_edits = true,
 
-  -- Rename a file and the language servers hear about it, so imports follow.
   lsp_file_methods = {
     enabled = true,
     timeout_ms = 1000,
@@ -37,11 +34,14 @@ require("oil").setup({
       return name == ".DS_Store"
     end,
   },
-
-  float = {
-    padding = 2,
-    max_width = 0.6,
-    max_height = 0.8,
-    border = "rounded",
-  },
 })
+
+function M.toggle_oil(dir)
+  if vim.bo.filetype == "oil" then
+    require("oil").close()
+  else
+    require("oil").open(dir)
+  end
+end
+
+return M
