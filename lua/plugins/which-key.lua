@@ -16,7 +16,7 @@ wk.setup({
     mappings = false,
   },
   spec = {
-    { "<leader>v", group = "LSP" },
+    { "<leader>l", group = "LSP" },
     { "<leader>e", desc = "Parent directory (oil)" },
     { "<leader>E", desc = "Current directory (oil)" },
     { ";", group = "Pickers" },

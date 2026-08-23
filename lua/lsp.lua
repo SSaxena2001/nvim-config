@@ -219,6 +219,18 @@ vim.diagnostic.config({
     header = "",
     prefix = "",
   },
+  jump = {
+    -- ]d / [d land on a diagnostic and pop the float describing it. There is
+    -- no `jump.float` option any more -- `on_jump` replaced it -- so the
+    -- float is opened by hand, scoped to the cursor and left unfocused so the
+    -- next motion dismisses it.
+    on_jump = function(diagnostic, bufnr)
+      if not diagnostic then
+        return
+      end
+      vim.diagnostic.open_float({ bufnr = bufnr, scope = "cursor", focus = false })
+    end,
+  },
   underline = true,
   update_in_insert = false,
   severity_sort = true,
@@ -234,11 +246,13 @@ vim.api.nvim_create_autocmd("LspAttach", {
 
     vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
     vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
-    vim.keymap.set("n", "<leader>vws", vim.lsp.buf.workspace_symbol, opts)
-    vim.keymap.set("n", "<leader>vd", vim.diagnostic.open_float, opts)
-    vim.keymap.set("n", "<leader>vca", vim.lsp.buf.code_action, opts)
-    vim.keymap.set("n", "<leader>vrr", vim.lsp.buf.references, opts)
-    vim.keymap.set("n", "<leader>vrn", vim.lsp.buf.rename, opts)
+    vim.keymap.set("n", "<leader>lws", vim.lsp.buf.workspace_symbol, opts)
+    vim.keymap.set("n", "<leader>ld", vim.diagnostic.open_float, opts)
+    vim.keymap.set("n", "<leader>lrr", vim.lsp.buf.references, opts)
+    -- Code action and rename sit directly under <leader>; they are reached
+    -- often enough not to live behind the <leader>l group.
+    vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, opts)
+    vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
     vim.keymap.set("i", "<C-h>", vim.lsp.buf.signature_help, opts)
 
     vim.keymap.set("n", "]d", function()

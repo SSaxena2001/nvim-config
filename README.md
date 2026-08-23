@@ -18,7 +18,6 @@ no built-in equivalent are installed by `vim.pack` (Neovim 0.12+).
 | `lua/lsp.lua` | Native LSP: server configs, attach keymaps, diagnostics, completion |
 | `lua/find.lua` | `findfunc` for `:find`, backed by ripgrep; honours `.gitignore` and skips build output |
 | `lua/grep.lua` | `grepprg=rg`, `grepformat` |
-| `lua/statusline.lua` | A plain `'statusline'` string |
 | `lua/lazygit.lua` | lazygit in a terminal tab |
 
 ## Pickers
@@ -53,6 +52,11 @@ Seventeen, all either without a native equivalent or required to install one:
   `lua/colorscheme.lua`. Set `style = "vivid"` there for the higher-contrast
   variant. It runs transparent, so the terminal's own background shows
   through.
+- `lualine.nvim` — the statusline. `lua/plugins/lualine.lua` is craftzdog's
+  own lualine, ported off LazyVim: his `pretty_path` and `root_dir` helpers are
+  reimplemented there, and the sections that read snacks/noice/dap/lazy are
+  dropped. `theme = "auto"` resolves to the lualine theme
+  `solarized-osaka.nvim` ships, so it tracks the colorscheme.
 - `nvim-autopairs` — auto-closes brackets, quotes and tags. Treesitter-aware,
   so it does not pair inside strings or comments.
 - `fzf-lua` — the `;` pickers. LSP navigation is Neovim's own `vim.lsp.buf.*`,

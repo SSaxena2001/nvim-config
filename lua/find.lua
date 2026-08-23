@@ -1,8 +1,10 @@
 -- `:find` backed by a `findfunc`, in place of telescope's find_files.
 --
--- Candidates come from ripgrep rather than a glob: glob("**/*") misses dotfiles
--- and walks ignored directories, and ripgrep is already a dependency (see
--- lua/grep.lua). The fallback keeps :find working if it is missing.
+-- Candidates come from fd rather than a glob: glob("**/*") misses dotfiles and
+-- walks ignored directories, and fd is both faster than a Lua walk and
+-- .gitignore-aware for free. ripgrep is the second choice -- it is already a
+-- dependency for :grep, see lua/grep.lua -- and the glob fallback keeps :find
+-- working when neither is installed.
 
 local M = {}
 
@@ -14,17 +16,23 @@ local root_markers = {
   "go.work",
   "go.mod",
   "pyproject.toml",
-  ".git",
   "package.json",
 }
 
 -- Resolved at call time, not at load time, so it follows the buffer.
+--
+-- `.git` is asked for first and on its own. vim.fs.root() resolves a list of
+-- markers by priority rather than by distance, so with `.git` sitting in the
+-- same list as go.mod/pyproject.toml/the lockfiles, any nested module wins:
+-- open services/api/main.go in a monorepo and the "root" became services/api,
+-- which is what `;f` then searched. The repository is the project. The other
+-- markers are the fallback for trees that are not repositories at all.
 function M.project_root()
-  return vim.fs.root(0, root_markers) or vim.fn.getcwd()
+  return vim.fs.root(0, ".git") or vim.fs.root(0, root_markers) or vim.fn.getcwd()
 end
 
 -- `.git` is the only directory excluded outright: nothing in it is worth
--- completing over, and rg will happily walk it once `--hidden` is on.
+-- completing over, and fd will happily walk it once `--hidden` is on.
 --
 -- Everything else is left to .gitignore. That keeps hidden directories the
 -- project actually tracks -- .github, .config, .cargo -- reachable from `:find`
@@ -45,25 +53,46 @@ local fallback_dirs = {
 
 -- The file list `:find` completes over. lua/plugins/fzf.lua reuses this so
 -- the fzf picker and `:find` see the same set of files.
-function M.rg_command()
-  local args = {
-    "rg",
-    "--files",
-    "--hidden",
-    -- ripgrep only applies .gitignore when it detects a git repository. Without
-    -- this, a directory that is not a repo -- a scratch project, a worktree
-    -- checked out elsewhere, anything before `git init` -- has its ignore file
-    -- silently disregarded, and since .gitignore is now the only thing keeping
-    -- build output out of the list, completion fills up with node_modules.
-    "--no-require-git",
-  }
-
-  for _, dir in ipairs(always_ignore) do
-    args[#args + 1] = "--glob"
-    args[#args + 1] = "!**/" .. dir .. "/**"
+--
+-- fd first, ripgrep second, nil when neither is installed. Both are given the
+-- same three properties: hidden files included, .gitignore obeyed even outside
+-- a repository, `.git` itself skipped. The `--hidden` and `--no-ignore` flags
+-- are spelled the same either way, which is what fzf-lua's alt-h/alt-i toggles
+-- rewrite.
+function M.files_command()
+  if vim.fn.executable("fd") == 1 then
+    local args = {
+      "fd",
+      "--type",
+      "f",
+      "--hidden",
+      -- fd, like ripgrep, only applies .gitignore when it detects a git
+      -- repository. Without this a directory that is not a repo -- a scratch
+      -- project, a worktree checked out elsewhere, anything before `git init`
+      -- -- has its ignore file silently disregarded, and since .gitignore is
+      -- the only thing keeping build output out of the list, completion fills
+      -- up with node_modules.
+      "--no-require-git",
+      -- Print paths as `lua/find.lua`, not `./lua/find.lua`.
+      "--strip-cwd-prefix",
+    }
+    for _, dir in ipairs(always_ignore) do
+      args[#args + 1] = "--exclude"
+      args[#args + 1] = dir
+    end
+    return args
   end
 
-  return args
+  if vim.fn.executable("rg") == 1 then
+    local args = { "rg", "--files", "--hidden", "--no-require-git" }
+    for _, dir in ipairs(always_ignore) do
+      args[#args + 1] = "--glob"
+      args[#args + 1] = "!**/" .. dir .. "/**"
+    end
+    return args
+  end
+
+  return nil
 end
 
 local function fallback_ignored(path)
@@ -83,8 +112,9 @@ local function fallback_ignored(path)
 end
 
 local function candidates(root)
-  if vim.fn.executable("rg") == 1 then
-    local out = vim.system(M.rg_command(), { cwd = root, text = true }):wait()
+  local cmd = M.files_command()
+  if cmd then
+    local out = vim.system(cmd, { cwd = root, text = true }):wait()
     if out.code == 0 then
       return vim.split(out.stdout, "\n", { trimempty = true })
     end
@@ -105,13 +135,18 @@ end
 function _G.native_find(text, _)
   local root = M.project_root()
   local cwd = vim.fn.getcwd()
+  local result = candidates(root)
 
-  local result = {}
-  for _, rel in ipairs(candidates(root)) do
-    local abs = vim.fs.normalize(vim.fs.joinpath(root, rel))
-    -- Display relative to cwd when the file is underneath it, so completion
-    -- stays readable; :find opens either form.
-    result[#result + 1] = vim.startswith(abs, cwd .. "/") and abs:sub(#cwd + 2) or abs
+  -- fd already prints paths relative to the directory it ran in, so when that
+  -- is also :pwd the list is ready as-is. Rewriting it anyway cost more than
+  -- the fd call itself on a large tree. Only the root ~= cwd case needs work.
+  if root ~= cwd then
+    for i, rel in ipairs(result) do
+      local abs = vim.fs.joinpath(root, rel)
+      -- Display relative to cwd when the file is underneath it, so completion
+      -- stays readable; :find opens either form.
+      result[i] = vim.startswith(abs, cwd .. "/") and abs:sub(#cwd + 2) or abs
+    end
   end
 
   if text == "" then

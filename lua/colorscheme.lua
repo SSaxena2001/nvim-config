@@ -18,8 +18,8 @@ require("solarized-osaka").setup({
     keywords = {},
     -- Floats and sidebar-like windows keep a real background even though the
     -- editor itself is transparent, so they read as separate surfaces.
-    floats = "dark",
-    sidebars = "dark",
+    floats = "transparent" or "dark",
+    sidebars = "transparent" or "dark",
   },
   sidebars = { "qf", "help" },
 

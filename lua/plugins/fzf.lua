@@ -4,24 +4,14 @@
 -- findfunc and `:grep` still shells out to ripgrep through grepprg. These
 -- pickers are an interactive front end over that, not a replacement for it.
 --
+-- The file-listing command is left to fzf-lua, which already picks fd over rg
+-- over find and defaults to `hidden = true`. alt-h and alt-i toggle hidden and
+-- ignored files, and only fzf-lua knows how to rewrite its own command for
+-- that -- a hand-built `files.cmd` here is what breaks those toggles.
+--
 -- Matching happens in the fzf binary and the file/grep providers run in a
 -- separate Neovim process, which is why this stays responsive on large trees
 -- where an in-process Lua matcher would not.
-local find = require("find")
-
--- fzf-lua runs `files.cmd` through `sh -c`, so the glob patterns need quoting.
--- The flags must stay bare, though: the alt-h/alt-i toggles rewrite the command
--- by matching a flag preceded by whitespace, and a quoted `'--hidden'` never
--- matches -- which turns those keys into silent no-ops.
-local function shell_cmd(args)
-  local out = vim.tbl_map(function(arg)
-    return arg:match("^[%w%-%.=/]+$") and arg or vim.fn.shellescape(arg)
-  end, args)
-  -- Lets fzf-lua take its no-ANSI fast path when it parses the output.
-  out[#out + 1] = "--color=never"
-  return table.concat(out, " ")
-end
-
 require("fzf-lua").setup({
   -- Derive the fzf colors from the active colorscheme rather than carrying a
   -- second palette that has to be kept in sync with the colorscheme.
@@ -47,12 +37,5 @@ require("fzf-lua").setup({
       -- quickfix list, which quicker.nvim styles and makes editable.
       ["ctrl-q"] = "select-all+accept",
     },
-  },
-
-  files = {
-    -- Reuse the ripgrep invocation find.lua's findfunc already builds, so `;f`
-    -- and `:find` list the same files: hidden ones included, .gitignore obeyed
-    -- outside git repos, build output excluded.
-    cmd = shell_cmd(find.rg_command()),
   },
 })
