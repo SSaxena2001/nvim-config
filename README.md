@@ -49,10 +49,10 @@ Seventeen, all either without a native equivalent or required to install one:
   only c/lua/markdown/query/vim/vimdoc. Highlighting starts on `FileType`; the
   parser list lives in `lua/plugins/treesitter.lua`.
   Folds come from the tree (`foldexpr`, see `lua/options.lua`).
-- `rose-pine` + `vague.nvim` — colorschemes. Both stay installed; the `active`
-  local at the top of `lua/colorscheme.lua` picks which one loads. rose-pine is
-  on `moon`; `main` and the light `dawn` are one word away. Both run
-  transparent, so the terminal's own background shows through.
+- `solarized-osaka.nvim` — the colorscheme, configured in
+  `lua/colorscheme.lua`. Set `style = "vivid"` there for the higher-contrast
+  variant. It runs transparent, so the terminal's own background shows
+  through.
 - `nvim-autopairs` — auto-closes brackets, quotes and tags. Treesitter-aware,
   so it does not pair inside strings or comments.
 - `fzf-lua` — the `;` pickers. LSP navigation is Neovim's own `vim.lsp.buf.*`,

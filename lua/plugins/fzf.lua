@@ -24,7 +24,7 @@ end
 
 require("fzf-lua").setup({
   -- Derive the fzf colors from the active colorscheme rather than carrying a
-  -- second palette that has to be kept in sync with rose-pine.
+  -- second palette that has to be kept in sync with the colorscheme.
   fzf_colors = true,
 
   winopts = {

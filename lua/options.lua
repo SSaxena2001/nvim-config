@@ -54,6 +54,7 @@ vim.opt.inccommand = "split"
 vim.opt.hlsearch = false
 vim.opt.incsearch = true
 vim.opt.ignorecase = true -- Case insensitive searching UNLESS /C or capital in search
+vim.opt.smartcase = true -- ... but preserve case in searches like /C
 vim.opt.backspace = { "start", "eol", "indent" }
 
 -- Deliberately no `path:append("**")`. Recursive ** makes commands like `gf`
