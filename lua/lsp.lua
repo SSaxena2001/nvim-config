@@ -239,9 +239,49 @@ vim.diagnostic.config({
 
 -- Attach --------------------------------------------------------------------
 
+-- `autotrigger` opens the popup on the server's `triggerCharacters` and on
+-- nothing else, so left alone it only fires after `.` or `:` -- never while you
+-- are part way through a name. Adding the word characters is the documented way
+-- to trigger on every keypress (`:h vim.lsp.completion.enable()`), and it is
+-- also the only thing that makes LuaSnip's items reachable, since a snippet
+-- trigger is plain letters with no punctuation to fire on.
+--
+-- The list is rebuilt as a set rather than appended to: `server_capabilities` is
+-- one table shared by every buffer the client attaches to, and appending would
+-- grow it on each attach.
+local function enable_completion(client, bufnr)
+  local provider = client.server_capabilities.completionProvider
+  if not provider then
+    return
+  end
+
+  local chars = {}
+  for _, char in ipairs(provider.triggerCharacters or {}) do
+    chars[char] = true
+  end
+  for char in ("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"):gmatch(".") do
+    chars[char] = true
+  end
+  provider.triggerCharacters = vim.tbl_keys(chars)
+
+  vim.lsp.completion.enable(true, client.id, bufnr, { autotrigger = true })
+end
+
 vim.api.nvim_create_autocmd("LspAttach", {
   group = vim.api.nvim_create_augroup("LspAttach", { clear = true }),
   callback = function(e)
+    local client = vim.lsp.get_client_by_id(e.data.client_id)
+
+    -- The snippet source in lua/plugins/luasnip.lua is an in-process LSP client,
+    -- so that its items land in the same popup as the real servers'. It answers
+    -- nothing but completion, and it attaches to every buffer -- so it gets the
+    -- completion wiring below and none of the keymaps. Binding `gd` and `K` in a
+    -- buffer with no language server would shadow what they already do.
+    if client and client.name == "luasnip" then
+      enable_completion(client, e.buf)
+      return
+    end
+
     local opts = { buffer = e.buf }
 
     vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
@@ -265,9 +305,8 @@ vim.api.nvim_create_autocmd("LspAttach", {
     -- Native completion, in place of nvim-cmp. Neovim drives the popup from
     -- the server's items; `autotrigger` opens it as you type rather than only
     -- on <C-x><C-o>.
-    local client = vim.lsp.get_client_by_id(e.data.client_id)
     if client and client:supports_method("textDocument/completion") then
-      vim.lsp.completion.enable(true, client.id, e.buf, { autotrigger = true })
+      enable_completion(client, e.buf)
     end
   end,
 })

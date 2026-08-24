@@ -16,7 +16,7 @@ no built-in equivalent are installed by `vim.pack` (Neovim 0.12+).
 | `lua/pack.lua` | `vim.pack.add` plugin list |
 | `lua/plugins/` | Per-plugin setup |
 | `lua/lsp.lua` | Native LSP: server configs, attach keymaps, diagnostics, completion |
-| `lua/find.lua` | `findfunc` for `:find`, backed by ripgrep; honours `.gitignore` and skips build output |
+| `lua/find.lua` | `findfunc` for `:find`, backed by fd (ripgrep, then a glob, as fallbacks); honours `.gitignore` and skips build output |
 | `lua/grep.lua` | `grepprg=rg`, `grepformat` |
 | `lua/lazygit.lua` | lazygit in a terminal tab |
 
@@ -24,8 +24,9 @@ no built-in equivalent are installed by `vim.pack` (Neovim 0.12+).
 
 The `;` prefix, on fzf-lua. `<CR>` opens a single selection, `<C-q>` sends the
 whole result set to the quickfix list, which quicker.nvim styles and makes
-editable, and `;;` reopens it. `;f` lists the same files `:find` completes over
-— both build their ripgrep invocation from `lua/find.lua`.
+editable, and `;;` reopens it. `;f` searches from the project root that
+`lua/find.lua` resolves, the same root `:find` uses; the listing itself is left
+to fzf-lua, which already prefers fd and streams it from a separate process.
 
 | Key | What |
 |---|---|
@@ -39,6 +40,22 @@ editable, and `;;` reopens it. `;f` lists the same files `:find` completes over
 | `\` | Buffers |
 | `;e` | Every diagnostic in the workspace |
 | `;s` | Document symbols |
+
+## Completion
+
+Neovim's own `vim.lsp.completion`, not nvim-cmp. The popup opens as you type:
+`lua/lsp.lua` adds the word characters to each server's `triggerCharacters`,
+which is what `autotrigger` fires on. Snippets are in the same popup, marked
+`Snippet`, because LuaSnip is registered as another LSP client.
+
+| Key | Mode | What |
+|---|---|---|
+| `<C-y>` | insert | Accept the selected item; a snippet expands on accept |
+| `<C-e>` | insert | Dismiss the popup, or cycle a snippet's choice node when one is active |
+| `<C-k>` | insert, select | Expand the trigger before the cursor, or jump to the next field |
+| `<C-j>` | insert, select | Jump to the previous field |
+| `<C-h>` | insert | Signature help |
+| `<C-x><C-o>` | insert | Open the popup by hand |
 
 ## Plugins
 
@@ -59,6 +76,13 @@ Seventeen, all either without a native equivalent or required to install one:
   `solarized-osaka.nvim` ships, so it tracks the colorscheme.
 - `nvim-autopairs` — auto-closes brackets, quotes and tags. Treesitter-aware,
   so it does not pair inside strings or comments.
+- `LuaSnip` + `friendly-snippets` — snippets. `vim.snippet` can already expand
+  what a language server sends back, but it has no library of its own; LuaSnip
+  is the store and friendly-snippets is the content. `lua/plugins/luasnip.lua`
+  also registers LuaSnip as an in-process LSP client so its snippets appear in
+  the same completion popup as the servers' — there is no nvim-cmp here to merge
+  a second source in. Put your own VS Code-format snippets in
+  `snippets/` and they load alongside.
 - `fzf-lua` — the `;` pickers. LSP navigation is Neovim's own `vim.lsp.buf.*`,
   not a picker.
   Matching runs in the `fzf` binary and the file/grep providers run in a
@@ -91,5 +115,5 @@ Servers and formatters are installed by mason on first launch (see
 Not covered by mason, install these yourself:
 
 ```
-brew install ripgrep fzf lazygit
+brew install fd ripgrep fzf lazygit
 ```
