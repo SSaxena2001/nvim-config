@@ -2,7 +2,7 @@
 -- more: Neovim 0.12's native vim.lsp.config / vim.lsp.enable does the actual
 -- LSP work, so there is no nvim-lspconfig and no mason-lspconfig here.
 --
--- The server definitions live in lua/lsp/servers.lua. Mason's bin directory is
+-- The server definitions live in lua/lsp.lua. Mason's bin directory is
 -- prepended to $PATH in lua/options.lua, before anything tries to launch a
 -- server by name.
 require("mason").setup()
@@ -28,7 +28,6 @@ require("mason-tool-installer").setup({
     "prettierd",
     "stylua",
     "clang-format",
-    "goimports",
     "shfmt",
   },
   run_on_start = true,

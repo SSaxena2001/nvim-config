@@ -26,7 +26,7 @@ map("n", "[h", function()
   harpoon:list():prev()
 end, { desc = "Previous Harpoon file" })
 
-for i = 1, 3 do
+for i = 1, 9 do
   map("n", "<leader>" .. i, function()
     harpoon:list():select(i)
   end, { desc = "Harpoon file " .. i })

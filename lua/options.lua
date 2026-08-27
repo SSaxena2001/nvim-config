@@ -4,7 +4,6 @@
 -- name, so this has to be on $PATH before anything tries to start one.
 vim.env.PATH = vim.fn.stdpath("data") .. "/mason/bin:" .. vim.env.PATH
 
-vim.opt.encoding = "utf-8"
 vim.opt.fileencoding = "utf-8"
 
 vim.opt.number = true
@@ -53,8 +52,8 @@ vim.opt.autoread = true
 vim.opt.inccommand = "split"
 vim.opt.hlsearch = false
 vim.opt.incsearch = true
-vim.opt.ignorecase = true -- Case insensitive searching UNLESS /C or capital in search
-vim.opt.smartcase = true -- ... but preserve case in searches like /C
+vim.opt.ignorecase = true -- Case insensitive searching UNLESS \C or a capital
+vim.opt.smartcase = true -- ... but a capital in the pattern makes it sensitive
 vim.opt.backspace = { "start", "eol", "indent" }
 
 -- Deliberately no `path:append("**")`. Recursive ** makes commands like `gf`
