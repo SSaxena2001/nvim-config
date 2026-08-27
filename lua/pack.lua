@@ -36,13 +36,10 @@ vim.pack.add({
   { src = "https://github.com/mason-org/mason.nvim" },
   { src = "https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim" },
 
-  -- Filetype icons. Needed by oil's icon column and by lualine; requires a
+  -- Filetype icons. Needed by oil's icon column; requires a
   -- Nerd Font in the terminal.
   { src = "https://github.com/nvim-tree/nvim-web-devicons" },
 
-  -- Statusline. Replaces the plain `vim.o.statusline` string this config used
-  -- to set; see lua/plugins/lualine.lua.
-  { src = "https://github.com/nvim-lualine/lualine.nvim" },
 
   -- File explorer as an editable buffer. Replaces netrw.
   { src = "https://github.com/stevearc/oil.nvim" },
@@ -69,7 +66,6 @@ require("plugins.treesitter")
 require("plugins.gitsigns")
 require("plugins.supermaven")
 require("plugins.devicons")
-require("plugins.lualine")
 require("plugins.oil")
 require("plugins.quicker")
 require("plugins.fzf")

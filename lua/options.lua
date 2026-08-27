@@ -74,7 +74,8 @@ vim.opt.updatetime = 50
 -- all run through -- so it wants to stay POSIX-compatible and to follow the
 -- shell actually in use rather than being pinned to one.
 
--- lualine draws the mode, so Neovim's own -- INSERT -- line is noise.
+-- lua/statusline.lua draws the mode, so Neovim's own -- INSERT -- line is
+-- a second copy of it.
 vim.opt.showmode = false
 vim.opt.laststatus = 3
 vim.opt.cmdheight = 0

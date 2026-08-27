@@ -11,6 +11,7 @@ vim.g.loaded_netrwPlugin = 1
 require("options")
 require("pack")
 require("colorscheme")
+require("statusline")
 require("lsp")
 require("find")
 require("grep")
