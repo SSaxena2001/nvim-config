@@ -17,6 +17,7 @@ no built-in equivalent are installed by `vim.pack` (Neovim 0.12+).
 | `lua/plugins/` | Per-plugin setup |
 | `lua/lsp.lua` | Native LSP: server configs, attach keymaps, diagnostics, completion |
 | `lua/find.lua` | `findfunc` for `:find`, backed by fd (ripgrep, then a glob, as fallbacks); honours `.gitignore` and skips build output |
+| `lua/statusline.lua` | The statusline — mode, filename, unsaved marker |
 | `lua/grep.lua` | `grepprg=rg`, `grepformat` |
 | `lua/lazygit.lua` | lazygit in a terminal tab |
 
@@ -45,21 +46,42 @@ to fzf-lua, which already prefers fd and streams it from a separate process.
 
 Neovim's own `vim.lsp.completion`, not nvim-cmp. The popup opens as you type:
 `lua/lsp.lua` adds the word characters to each server's `triggerCharacters`,
-which is what `autotrigger` fires on. Snippets are in the same popup, marked
-`Snippet`, because LuaSnip is registered as another LSP client.
+which is what `autotrigger` fires on. There is no snippet library: a server's
+own snippet completions still expand, through `vim.snippet`, but nothing here
+supplies triggers of its own.
 
 | Key | Mode | What |
 |---|---|---|
-| `<C-y>` | insert | Accept the selected item; a snippet expands on accept |
-| `<C-e>` | insert | Dismiss the popup, or cycle a snippet's choice node when one is active |
-| `<C-k>` | insert, select | Expand the trigger before the cursor, or jump to the next field |
-| `<C-j>` | insert, select | Jump to the previous field |
+| `<C-y>` | insert | Accept the selected item; a server's snippet expands on accept |
+| `<C-e>` | insert | Dismiss the popup |
 | `<C-h>` | insert | Signature help |
 | `<C-x><C-o>` | insert | Open the popup by hand |
 
+## Statusline
+
+`lua/statusline.lua`, no plugin. `vim.o.statusline` is a format string; the two
+parts that need logic are Lua functions reached through `v:lua`, wrapped in
+`%{% %}` so what they return is re-read as format items and can carry its own
+colours.
+
+| Left to right | What |
+|---|---|
+| Mode | `NORMAL`, `INSERT`, `VISUAL`/`V-LINE`/`V-BLOCK`, `REPLACE`, `COMMAND`, `TERMINAL` … , coloured per mode |
+| Filename | Relative to `:pwd`, `~`-shortened outside it. oil buffers show the directory, terminals show the command |
+| `●` | Unsaved changes: the filename turns `DiagnosticWarn` and picks up a dot. `󰌾` marks readonly instead |
+| `%l:%c` `%P` | Line:column and position in the file, pushed right |
+
+Every colour is read out of the active colorscheme's own groups (`Function`,
+`String`, `DiagnosticWarn` …) and rebuilt on `ColorScheme`, so there is no
+second palette to keep in sync. Foregrounds only — `lua/colorscheme.lua` runs
+transparent, and a background here would paint a solid bar back under it.
+
+`laststatus = 3` in `lua/options.lua` makes it one line for the whole screen,
+and `showmode = false` stops Neovim printing a second `-- INSERT --` below it.
+
 ## Plugins
 
-Seventeen, all either without a native equivalent or required to install one:
+Sixteen, all either without a native equivalent or required to install one:
 
 - `nvim-treesitter` + `nvim-treesitter-textobjects` — Neovim ships parsers for
   only c/lua/markdown/query/vim/vimdoc. Highlighting starts on `FileType`; the
@@ -69,20 +91,8 @@ Seventeen, all either without a native equivalent or required to install one:
   `lua/colorscheme.lua`. Set `style = "vivid"` there for the higher-contrast
   variant. It runs transparent, so the terminal's own background shows
   through.
-- `lualine.nvim` — the statusline. `lua/plugins/lualine.lua` is craftzdog's
-  own lualine, ported off LazyVim: his `pretty_path` and `root_dir` helpers are
-  reimplemented there, and the sections that read snacks/noice/dap/lazy are
-  dropped. `theme = "auto"` resolves to the lualine theme
-  `solarized-osaka.nvim` ships, so it tracks the colorscheme.
 - `nvim-autopairs` — auto-closes brackets, quotes and tags. Treesitter-aware,
   so it does not pair inside strings or comments.
-- `LuaSnip` + `friendly-snippets` — snippets. `vim.snippet` can already expand
-  what a language server sends back, but it has no library of its own; LuaSnip
-  is the store and friendly-snippets is the content. `lua/plugins/luasnip.lua`
-  also registers LuaSnip as an in-process LSP client so its snippets appear in
-  the same completion popup as the servers' — there is no nvim-cmp here to merge
-  a second source in. Put your own VS Code-format snippets in
-  `snippets/` and they load alongside.
 - `fzf-lua` — the `;` pickers. LSP navigation is Neovim's own `vim.lsp.buf.*`,
   not a picker.
   Matching runs in the `fzf` binary and the file/grep providers run in a
@@ -97,7 +107,10 @@ Seventeen, all either without a native equivalent or required to install one:
 - `gitsigns.nvim` — git hunks in the sign column.
 - `supermaven-nvim` — inline AI completion. Separate from the LSP completion
   `lua/lsp.lua` sets up.
-- `oil.nvim` — the file explorer, as an editable buffer. Replaces netrw.
+- `oil.nvim` — the file explorer, as an editable buffer. netrw is switched off
+  outright in `init.lua`, before the runtime would source it, so oil owns every
+  directory buffer. `-` walks to the parent, `<leader>e` opens the current
+  file's directory and `<leader>E` opens `:pwd`.
 - `which-key.nvim` — popup listing what a half-typed prefix can still become.
   It reads the `desc` already on each keymap, so only the prefixes themselves
   are named, in `lua/plugins/which-key.lua`.
@@ -105,6 +118,15 @@ Seventeen, all either without a native equivalent or required to install one:
   buffer. `<C-q>` from any picker lands here.
 - `nvim-web-devicons` — filetype icons for oil and the fzf-lua pickers. Needs a
   Nerd Font in the terminal.
+- `mini.nvim` — for one module, `mini.statuscolumn`, set up in
+  `lua/plugins/statuscolumn.lua`. It draws the column left of the text: line
+  numbers, signs, fold markers, a `▏` separator, and dimming in inactive
+  windows. `'statuscolumn'` is a native option, but the awkward parts are the
+  ones around the sections — holding the width steady as signs appear, and
+  marking wrapped and virtual lines instead of repeating a line number. The
+  whole repository comes along because `mini.statuscolumn` has no standalone
+  one yet; no other module in it runs, since a mini module does nothing until
+  its own `setup()` is called.
 
 ## External binaries
 
@@ -116,4 +138,13 @@ Not covered by mason, install these yourself:
 
 ```
 brew install fd ripgrep fzf lazygit
+```
+
+`ols` and `odinfmt` do come from mason, but neither carries a compiler: ols
+shells out to `odin check` for its diagnostics and reads the `core:` and
+`vendor:` collections out of the Odin distribution. Only needed if you write
+Odin:
+
+```
+brew install odin
 ```
