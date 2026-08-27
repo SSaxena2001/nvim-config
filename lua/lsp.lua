@@ -242,9 +242,7 @@ vim.diagnostic.config({
 -- `autotrigger` opens the popup on the server's `triggerCharacters` and on
 -- nothing else, so left alone it only fires after `.` or `:` -- never while you
 -- are part way through a name. Adding the word characters is the documented way
--- to trigger on every keypress (`:h vim.lsp.completion.enable()`), and it is
--- also the only thing that makes LuaSnip's items reachable, since a snippet
--- trigger is plain letters with no punctuation to fire on.
+-- to trigger on every keypress (`:h vim.lsp.completion.enable()`).
 --
 -- The list is rebuilt as a set rather than appended to: `server_capabilities` is
 -- one table shared by every buffer the client attaches to, and appending would
@@ -271,16 +269,6 @@ vim.api.nvim_create_autocmd("LspAttach", {
   group = vim.api.nvim_create_augroup("LspAttach", { clear = true }),
   callback = function(e)
     local client = vim.lsp.get_client_by_id(e.data.client_id)
-
-    -- The snippet source in lua/plugins/luasnip.lua is an in-process LSP client,
-    -- so that its items land in the same popup as the real servers'. It answers
-    -- nothing but completion, and it attaches to every buffer -- so it gets the
-    -- completion wiring below and none of the keymaps. Binding `gd` and `K` in a
-    -- buffer with no language server would shadow what they already do.
-    if client and client.name == "luasnip" then
-      enable_completion(client, e.buf)
-      return
-    end
 
     local opts = { buffer = e.buf }
 

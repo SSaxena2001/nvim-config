@@ -23,13 +23,6 @@ vim.pack.add({
   -- Auto-close brackets, quotes and tags. Neovim has no built-in equivalent.
   { src = "https://github.com/windwp/nvim-autopairs" },
 
-  -- Snippet engine. `vim.snippet` can expand an LSP snippet the server sends
-  -- back, but it has no store of its own and no way to define one, so there is
-  -- nothing to complete over until a plugin supplies the snippets.
-  { src = "https://github.com/L3MON4D3/LuaSnip" },
-  -- The snippets themselves. LuaSnip ships an engine and zero content.
-  { src = "https://github.com/rafamadriz/friendly-snippets" },
-
   -- Formatter dispatch on save, with an LSP fallback. Replaces the hand-rolled
   -- BufWritePre autocmd this config used to carry.
   { src = "https://github.com/stevearc/conform.nvim" },
@@ -81,7 +74,6 @@ require("plugins.oil")
 require("plugins.quicker")
 require("plugins.fzf")
 require("plugins.autopairs")
-require("plugins.luasnip")
 require("plugins.conform")
 require("plugins.harpoon")
 require("plugins.which-key")
