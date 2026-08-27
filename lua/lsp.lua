@@ -38,31 +38,63 @@ vim.lsp.config("lua_ls", {
 
 -- TypeScript 7 -- the native compiler -- serves the language server from the
 -- same binary as the compiler.
+--
+-- `--lsp` arrived in TypeScript 7. A 5.x or 6.x tsc answers it with "Unknown
+-- compiler option" and exits 1, which Neovim surfaces only as the client
+-- quitting -- so the version is checked before anything is launched, for the
+-- binary on $PATH as much as for the project's own. Both need it: mason
+-- installs a tsc, and lua/options.lua puts mason's bin ahead of everything
+-- else, so $PATH is not the system's answer either.
+--
+-- The check lives in root_dir rather than in cmd because root_dir is the only
+-- one of the two that can decline. cmd has to return a client -- returning nil
+-- throws on every buffer that opens -- while root_dir simply never calls
+-- on_dir.
+local tsc_bin = {}
+local tsc_checked = {}
+
+local function tsc_serves_lsp(bin)
+  if not bin or vim.fn.executable(bin) == 0 then
+    return false
+  end
+  local out = vim.system({ bin, "--version" }, { text = true }):wait(5000)
+  local major = out.code == 0 and tonumber((out.stdout or ""):match("Version (%d+)"))
+  return major ~= nil and major >= 7
+end
+
 vim.lsp.config("tsc", {
-  -- Prefer the project's own TypeScript, but only when it is new enough to be
-  -- a language server. `--lsp` arrived in TypeScript 7; a 5.x or 6.x tsc
-  -- answers it with "Unknown compiler option" and exits 1, which Neovim
-  -- surfaces only as the client quitting. Most projects still pin 5.x, so this
-  -- check is what keeps them working.
   cmd = function(dispatchers, config)
-    local bin = "tsc"
-    local root = (config or {}).root_dir
-    local local_bin = root and vim.fs.joinpath(root, "node_modules", ".bin", "tsc")
-    if local_bin and vim.fn.executable(local_bin) == 1 then
-      local out = vim.system({ local_bin, "--version" }, { text = true }):wait(5000)
-      local major = out.code == 0 and tonumber((out.stdout or ""):match("Version (%d+)"))
-      if major and major >= 7 then
-        bin = local_bin
-      end
-    end
-    return vim.lsp.rpc.start({ bin, "--lsp", "--stdio" }, dispatchers)
+    return vim.lsp.rpc.start({ tsc_bin[config.root_dir] or "tsc", "--lsp", "--stdio" }, dispatchers)
   end,
   filetypes = { "javascript", "javascriptreact", "typescript", "typescriptreact" },
-  -- Lockfiles first so a monorepo reuses one server, then TS/JS markers.
-  root_markers = {
-    { "package-lock.json", "yarn.lock", "pnpm-lock.yaml", "bun.lockb", "bun.lock" },
-    { "tsconfig.json", "jsconfig.json", "package.json", ".git" },
-  },
+  root_dir = function(bufnr, on_dir)
+    -- Lockfiles first so a monorepo reuses one server, then TS/JS markers.
+    -- Two calls rather than one nested `root_markers` list: this is vim.fs.root,
+    -- which takes a flat list, and the fallback is what encodes the priority.
+    local root = vim.fs.root(bufnr, { "package-lock.json", "yarn.lock", "pnpm-lock.yaml", "bun.lockb", "bun.lock" })
+      or vim.fs.root(bufnr, { "tsconfig.json", "jsconfig.json", "package.json", ".git" })
+    if not root then
+      return
+    end
+
+    -- Resolved once per root. Each check spawns a process, and root_dir runs
+    -- for every buffer opened underneath it.
+    if not tsc_checked[root] then
+      tsc_checked[root] = true
+      local local_bin = vim.fs.joinpath(root, "node_modules", ".bin", "tsc")
+      if tsc_serves_lsp(local_bin) then
+        tsc_bin[root] = local_bin
+      elseif tsc_serves_lsp("tsc") then
+        tsc_bin[root] = "tsc"
+      else
+        vim.notify("tsc: no TypeScript 7+ for " .. root .. "; no language server started", vim.log.levels.WARN)
+      end
+    end
+
+    if tsc_bin[root] then
+      on_dir(root)
+    end
+  end,
 })
 
 vim.lsp.config("pyright", {
@@ -167,19 +199,35 @@ vim.lsp.config("astro", {
   cmd = { "astro-ls", "--stdio" },
   filetypes = { "astro" },
   root_markers = { "astro.config.mjs", "package.json", ".git" },
-  init_options = {
-    -- astro-ls has no TypeScript of its own to borrow. Prefer the project's
-    -- copy so a monorepo pins its own version, then the one mason unpacked.
-    typescript = {
-      tsdk = (function()
-        local local_tsdk = vim.fs.joinpath(vim.fn.getcwd(), "node_modules", "typescript", "lib")
-        if vim.fn.isdirectory(local_tsdk) == 1 then
-          return local_tsdk
-        end
-        return vim.fn.stdpath("data") .. "/mason/packages/astro-language-server/node_modules/typescript/lib"
-      end)(),
-    },
-  },
+  -- astro-ls has no TypeScript of its own to borrow, so it has to be handed a
+  -- tsdk path. Prefer the project's copy, fall back to the one mason unpacked.
+  --
+  -- Resolved in before_init rather than in a literal `init_options` above: this
+  -- table is built once, when the module loads, so anything computed here is
+  -- pinned to whatever directory Neovim happened to start in -- which made the
+  -- "prefer the project's copy" half only work when Neovim was launched from
+  -- the project root. before_init runs per client, against the root it
+  -- actually resolved.
+  before_init = function(params, config)
+    local tsdk = vim.fn.stdpath("data") .. "/mason/packages/astro-language-server/node_modules/typescript/lib"
+
+    -- Walking up rather than checking the root alone: a monorepo hoists
+    -- TypeScript to the workspace root, leaving the package's own
+    -- node_modules without it.
+    local dir = config.root_dir or vim.fn.getcwd()
+    while dir do
+      local candidate = vim.fs.joinpath(dir, "node_modules", "typescript", "lib")
+      if vim.fn.isdirectory(candidate) == 1 then
+        tsdk = candidate
+        break
+      end
+      local parent = vim.fs.dirname(dir)
+      dir = parent ~= dir and parent or nil
+    end
+
+    params.initializationOptions =
+      vim.tbl_deep_extend("force", params.initializationOptions or {}, { typescript = { tsdk = tsdk } })
+  end,
 })
 
 -- Servers are launched by name off $PATH. mason installs the binaries and
@@ -201,23 +249,25 @@ vim.lsp.enable({
 })
 
 -- Diagnostics ---------------------------------------------------------------
+local signs = {
+  ERROR = "",
+  HINT = "",
+  WARN = "",
+  INFO = "",
+}
 
 vim.diagnostic.config({
   signs = {
     text = {
-      [vim.diagnostic.severity.ERROR] = "E",
-      [vim.diagnostic.severity.WARN] = "W",
-      [vim.diagnostic.severity.INFO] = "I",
-      [vim.diagnostic.severity.HINT] = "N",
+      [vim.diagnostic.severity.ERROR] = signs.ERROR,
+      [vim.diagnostic.severity.WARN] = signs.WARN,
+      [vim.diagnostic.severity.INFO] = signs.INFO,
+      [vim.diagnostic.severity.HINT] = signs.HINT,
     },
   },
   float = {
     border = "rounded",
-    style = "minimal",
-    focusable = false,
     source = true,
-    header = "",
-    prefix = "",
   },
   jump = {
     -- ]d / [d land on a diagnostic and pop the float describing it. There is
@@ -231,10 +281,16 @@ vim.diagnostic.config({
       vim.diagnostic.open_float({ bufnr = bufnr, scope = "cursor", focus = false })
     end,
   },
-  underline = true,
+  underline = false,
   update_in_insert = false,
   severity_sort = true,
-  virtual_text = { spacing = 4, source = "if_many", prefix = "" },
+  virtual_text = {
+    spacing = 4,
+    source = "if_many",
+    prefix = function(diagnostics)
+      return signs[vim.diagnostic.severity[diagnostics.severity]]
+    end,
+  },
 })
 
 -- Attach --------------------------------------------------------------------
@@ -273,7 +329,9 @@ vim.api.nvim_create_autocmd("LspAttach", {
     local opts = { buffer = e.buf }
 
     vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
-    vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
+    vim.keymap.set("n", "K", function()
+      vim.lsp.buf.hover({ border = "rounded" })
+    end, opts)
     vim.keymap.set("n", "<leader>lws", vim.lsp.buf.workspace_symbol, opts)
     vim.keymap.set("n", "<leader>ld", vim.diagnostic.open_float, opts)
     vim.keymap.set("n", "<leader>lrr", vim.lsp.buf.references, opts)
@@ -281,7 +339,13 @@ vim.api.nvim_create_autocmd("LspAttach", {
     -- often enough not to live behind the <leader>l group.
     vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, opts)
     vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
-    vim.keymap.set("i", "<C-h>", vim.lsp.buf.signature_help, opts)
+    -- <C-k>, not <C-h>: <C-h> is the byte 0x08, which is what a terminal
+    -- running `stty erase ^H` sends for Backspace -- mapping it there costs
+    -- Backspace in every buffer a server attaches to. <C-k> gives up
+    -- insert-mode digraphs instead, which is a far cheaper thing to lose.
+    vim.keymap.set("i", "<C-k>", function()
+      vim.lsp.buf.signature_help({ border = "rounded" })
+    end, opts)
 
     vim.keymap.set("n", "]d", function()
       vim.diagnostic.jump({ count = 1 })

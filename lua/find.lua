@@ -111,12 +111,38 @@ local function fallback_ignored(path)
   return false
 end
 
+-- findfunc runs on the main loop, so everything below blocks the editor while
+-- it works. Two things keep that bounded: the scan is cached for a couple of
+-- seconds, which is what turns a burst of completion requests into one fd run,
+-- and the run itself has a deadline, so a tree big enough -- or a network
+-- mount stalled enough -- to outlast it gives back an empty list instead of a
+-- Neovim that cannot be interrupted.
+local SCAN_TIMEOUT_MS = 2000
+local SCAN_TTL_NS = 2e9
+local cache = { root = nil, files = nil, at = 0 }
+
+local function remember(root, files)
+  cache.root, cache.files, cache.at = root, files, vim.uv.hrtime()
+  return files
+end
+
 local function candidates(root)
+  if cache.root == root and cache.files and (vim.uv.hrtime() - cache.at) < SCAN_TTL_NS then
+    return cache.files
+  end
+
   local cmd = M.files_command()
   if cmd then
-    local out = vim.system(cmd, { cwd = root, text = true }):wait()
+    local out = vim.system(cmd, { cwd = root, text = true }):wait(SCAN_TIMEOUT_MS)
     if out.code == 0 then
-      return vim.split(out.stdout, "\n", { trimempty = true })
+      return remember(root, vim.split(out.stdout, "\n", { trimempty = true }))
+    end
+    -- A timeout kills the process, which comes back as code 124 with a signal
+    -- set. Falling through to the glob below would be worse than useless: it
+    -- is the slower of the two walks, on the tree that just proved too large.
+    if out.signal ~= 0 then
+      vim.notify(cmd[1] .. " timed out listing " .. root, vim.log.levels.WARN)
+      return remember(root, {})
     end
   end
 
@@ -129,7 +155,7 @@ local function candidates(root)
       end
     end
   end
-  return files
+  return remember(root, files)
 end
 
 function _G.native_find(text, _)
@@ -141,12 +167,17 @@ function _G.native_find(text, _)
   -- is also :pwd the list is ready as-is. Rewriting it anyway cost more than
   -- the fd call itself on a large tree. Only the root ~= cwd case needs work.
   if root ~= cwd then
+    -- Into a new table, not over the old one: `result` is the cached scan, and
+    -- rewriting it in place would leave cwd-relative paths behind for the next
+    -- call to hand out as if they were root-relative.
+    local rewritten = {}
     for i, rel in ipairs(result) do
       local abs = vim.fs.joinpath(root, rel)
       -- Display relative to cwd when the file is underneath it, so completion
       -- stays readable; :find opens either form.
-      result[i] = vim.startswith(abs, cwd .. "/") and abs:sub(#cwd + 2) or abs
+      rewritten[i] = vim.startswith(abs, cwd .. "/") and abs:sub(#cwd + 2) or abs
     end
+    result = rewritten
   end
 
   if text == "" then

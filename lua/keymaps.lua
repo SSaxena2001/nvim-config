@@ -37,7 +37,10 @@ map("n", "Q", "<nop>")
 -- Substitute the word under the cursor everywhere
 map("n", "<leader>s", [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]], { desc = "Substitute word" })
 
-map("n", "<leader>x", "<cmd>!chmod +x %<CR>", { silent = true, desc = "chmod +x this file" })
+-- `%:S` and not a bare `%`: the filename goes straight into a shell command,
+-- so one with a space in it would arrive as two arguments and chmod would fail
+-- on both.
+map("n", "<leader>x", "<cmd>!chmod +x %:S<CR>", { silent = true, desc = "chmod +x this file" })
 
 -- Windows ----------------------------------------------------------------
 -- <C-l> is also supermaven's accept_suggestion, but that binding is insert
