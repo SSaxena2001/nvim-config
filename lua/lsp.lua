@@ -230,6 +230,25 @@ vim.lsp.config("astro", {
   end,
 })
 
+vim.lsp.config("ols", {
+  cmd = { "ols" },
+  filetypes = { "odin" },
+  -- ols.json is where a project declares its collections -- the import paths
+  -- beyond `core:` and `vendor:` -- so it is the truest marker of an Odin
+  -- project root. odinfmt.json is the formatter's own config and sits in the
+  -- same place; .git is the fallback for a project that carries neither.
+  root_markers = { "ols.json", "odinfmt.json", ".git" },
+  init_options = {
+    -- Passed to `odin check`, which is what ols runs to produce diagnostics.
+    checker_args = "-strict-style",
+    -- ols formats through odinfmt, and so does conform
+    -- (lua/plugins/conform.lua). Turning it off here leaves one owner: without
+    -- it, conform's `lsp_format = "fallback"` has a second formatter to pick
+    -- between for the same buffer.
+    enable_format = false,
+  },
+})
+
 -- Servers are launched by name off $PATH. mason installs the binaries and
 -- lua/options.lua puts its bin directory on $PATH; the install list lives in
 -- lua/plugins/mason.lua.
@@ -246,6 +265,7 @@ vim.lsp.enable({
   "emmet_ls",
   "marksman",
   "astro",
+  "ols",
 })
 
 -- Diagnostics ---------------------------------------------------------------

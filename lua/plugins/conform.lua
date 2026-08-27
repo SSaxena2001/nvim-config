@@ -50,9 +50,14 @@ require("conform").setup({
     python = { "ruff_fix", "ruff_organize_imports", "ruff_format" },
     rust = { "rustfmt", lsp_format = "fallback" },
 
+    -- odinfmt reads its settings from the first odinfmt.json found walking up
+    -- from the file; with none, it formats to its own defaults.
+    odin = { "odinfmt" },
+
     sh = { "shfmt" },
     bash = { "shfmt" },
     zsh = { "shfmt" },
+    odin = { "odinfmt" },
   },
   formatters = {
     ["clang-format"] = {
@@ -61,6 +66,7 @@ require("conform").setup({
     shfmt = {
       prepend_args = { "-i", "2", "-ci" },
     },
+    odinfmt = { command = "odinfmt", args = { "-stdin" }, stdin = true },
   },
 })
 
