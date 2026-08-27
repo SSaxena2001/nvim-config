@@ -1,0 +1,14 @@
+-- The column left of the text: line numbers, signs, fold markers.
+--
+-- Neovim has 'statuscolumn' natively and this could be a format string in
+-- lua/options.lua, the way lua/statusline.lua is. It is not, because the hard
+-- parts are not the sections -- they are everything around them: keeping the
+-- width from twitching as signs come and go, drawing something sensible beside
+-- wrapped and virtual lines rather than repeating the line number, and doing
+-- all of it on a function that runs once per visible line per redraw. This
+-- module is the "does it far better" case, not the "Neovim cannot" one.
+--
+-- Defaults are taken as they come. They already assume 'number' is on, which it
+-- is (lua/options.lua), and they dim the column in inactive windows, which is
+-- the same job the statusline does not have to do now that laststatus is 3.
+require("mini.statuscolumn").setup()

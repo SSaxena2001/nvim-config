@@ -40,7 +40,6 @@ vim.pack.add({
   -- Nerd Font in the terminal.
   { src = "https://github.com/nvim-tree/nvim-web-devicons" },
 
-
   -- File explorer as an editable buffer. Replaces netrw.
   { src = "https://github.com/stevearc/oil.nvim" },
 
@@ -53,6 +52,13 @@ vim.pack.add({
   -- Popup listing what a half-typed prefix can still become. Neovim has no
   -- equivalent; the `desc` on every keymap here is what it reads.
   { src = "https://github.com/folke/which-key.nvim" },
+
+  -- 'statuscolumn' with the sign, fold and wrapped-line handling worked out.
+  -- The whole of mini.nvim for one module is the only way to get it: unlike
+  -- the rest of the family, mini.statuscolumn has no standalone repository
+  -- yet. Nothing else in here runs -- a mini module does nothing until its own
+  -- setup() is called, and lua/plugins/statuscolumn.lua calls exactly one.
+  { src = "https://github.com/echasnovski/mini.nvim" },
 
   -- Quickfix styling, context lines and an editable quickfix buffer. This
   -- config routes grep, diagnostics and symbols through the quickfix list, so
@@ -67,6 +73,7 @@ require("plugins.gitsigns")
 require("plugins.supermaven")
 require("plugins.devicons")
 require("plugins.oil")
+require("plugins.statuscolumn")
 require("plugins.quicker")
 require("plugins.fzf")
 require("plugins.autopairs")
