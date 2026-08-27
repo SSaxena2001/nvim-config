@@ -65,15 +65,16 @@ map("n", "<leader>i", function()
 end, { desc = "Toggle inlay hints" })
 
 -- File explorer ----------------------------------------------------------
--- oil edits a directory as a buffer. `-` walks to the parent directory;
--- <leader>e toggles a sidebar pinned to the left, rooted at the project.
+-- oil edits a directory as a buffer, in a normal window -- there is no
+-- sidebar. <leader>e opens the directory holding the current file, <leader>E
+-- opens :pwd. Both toggle: pressing again from inside oil closes it.
 map("n", "<leader>e", function()
   require("plugins.oil").toggle_oil()
-end, { desc = "Open parent directory" })
+end, { desc = "Oil: parent directory" })
 
 map("n", "<leader>E", function()
   require("plugins.oil").toggle_oil(".")
-end, { desc = "Open current directory" })
+end, { desc = "Oil: current directory" })
 
 -- tmux -------------------------------------------------------------------
 -- Deliberately not `<cmd>silent !...<CR>`: `:!` suspends the UI and forces a
