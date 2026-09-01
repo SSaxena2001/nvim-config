@@ -1,5 +1,9 @@
 {
   "plugins": {
+    "colorbuddy.nvim": {
+      "rev": "8b968581e5c19d22a861d5f3fe5dbd83394fa681",
+      "src": "https://github.com/tjdevries/colorbuddy.nvim"
+    },
     "conform.nvim": {
       "rev": "016802de402556da54c36bd7359b441266b01cdd",
       "src": "https://github.com/stevearc/conform.nvim"
@@ -28,6 +32,10 @@
     "mini.nvim": {
       "rev": "1098976ddda3cf00f50c1dda5eef10ccf463d9eb",
       "src": "https://github.com/echasnovski/mini.nvim"
+    },
+    "neosolarized.nvim": {
+      "rev": "0c01fd2ac2ab33918073f57c63bcb2ae5a31d8de",
+      "src": "https://github.com/svrana/neosolarized.nvim"
     },
     "nvim-autopairs": {
       "rev": "430522f95fe4fb7c511ec64f8c1a90cc6a66c05c",

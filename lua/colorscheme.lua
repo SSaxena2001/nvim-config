@@ -6,9 +6,6 @@ require("solarized-osaka").setup({
   terminal_colors = true,
 
   styles = {
-    comments = {},
-    keywords = {},
-    functions = {},
     floats = "transparent",
     sidebars = "transparent",
   },
