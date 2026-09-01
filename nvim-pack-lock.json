@@ -37,10 +37,6 @@
       "rev": "0c01fd2ac2ab33918073f57c63bcb2ae5a31d8de",
       "src": "https://github.com/svrana/neosolarized.nvim"
     },
-    "nvim-autopairs": {
-      "rev": "430522f95fe4fb7c511ec64f8c1a90cc6a66c05c",
-      "src": "https://github.com/windwp/nvim-autopairs"
-    },
     "nvim-treesitter": {
       "rev": "427e9222363d07c32d6db6169e4049c28d58d141",
       "src": "https://github.com/nvim-treesitter/nvim-treesitter",

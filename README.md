@@ -91,8 +91,6 @@ Sixteen, all either without a native equivalent or required to install one:
   `lua/colorscheme.lua`. Set `style = "vivid"` there for the higher-contrast
   variant. It runs transparent, so the terminal's own background shows
   through.
-- `nvim-autopairs` — auto-closes brackets, quotes and tags. Treesitter-aware,
-  so it does not pair inside strings or comments.
 - `fzf-lua` — the `;` pickers. LSP navigation is Neovim's own `vim.lsp.buf.*`,
   not a picker.
   Matching runs in the `fzf` binary and the file/grep providers run in a
