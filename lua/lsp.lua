@@ -301,16 +301,14 @@ vim.diagnostic.config({
       vim.diagnostic.open_float({ bufnr = bufnr, scope = "cursor", focus = false })
     end,
   },
-  underline = false,
+  underline = true,
   update_in_insert = false,
   severity_sort = true,
-  virtual_text = {
-    spacing = 4,
-    source = "if_many",
-    prefix = function(diagnostics)
-      return signs[vim.diagnostic.severity[diagnostics.severity]]
-    end,
-  },
+  -- The underline already marks the offending span. Inline text repeats that
+  -- information at the end of the line, where it covers whatever is to the
+  -- right and reflows on every edit. The message is a keystroke away either
+  -- way: `<leader>ld` opens the float, and ]d / [d open it on arrival.
+  virtual_text = false,
 })
 
 -- Attach --------------------------------------------------------------------
