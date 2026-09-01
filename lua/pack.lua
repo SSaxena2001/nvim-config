@@ -28,6 +28,10 @@ vim.pack.add({
   -- Sign-column git hunks. No native equivalent.
   { src = "https://github.com/lewis6991/gitsigns.nvim" },
 
+  -- Git porcelain as Vim commands. The status buffer and `:Gdiffsplit` put
+  -- git's state in real buffers, which lua/lazygit.lua's TUI cannot.
+  { src = "https://github.com/tpope/vim-fugitive" },
+
   -- AI inline completion. No native equivalent.
   { src = "https://github.com/supermaven-inc/supermaven-nvim" },
 
@@ -82,6 +86,7 @@ require("plugins.mason")
 require("plugins.treesitter")
 require("plugins.treesitter-context")
 require("plugins.gitsigns")
+require("plugins.fugitive")
 require("plugins.supermaven")
 require("plugins.devicons")
 require("plugins.oil")
