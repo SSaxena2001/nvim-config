@@ -11,6 +11,11 @@ vim.pack.add({
   { src = "https://github.com/nvim-treesitter/nvim-treesitter", version = "main" },
   { src = "https://github.com/nvim-treesitter/nvim-treesitter-textobjects", version = "main" },
 
+  -- The enclosing function/class pinned to the top of the window. Draws it in
+  -- a float, which 'winbar' and the statusline cannot do, and works out what
+  -- to name from the same parsers as above.
+  { src = "https://github.com/nvim-treesitter/nvim-treesitter-context" },
+
   -- Colorscheme. Configured in lua/colorscheme.lua. The repo is named
   -- `neovim`, which is what vim.pack would otherwise install it as, so `name`
   -- pins the directory to what `require("rose-pine")` expects.
@@ -75,6 +80,7 @@ vim.pack.add({
 -- Mason first: it puts the server binaries on $PATH that lua/lsp/ launches.
 require("plugins.mason")
 require("plugins.treesitter")
+require("plugins.treesitter-context")
 require("plugins.gitsigns")
 require("plugins.supermaven")
 require("plugins.devicons")
