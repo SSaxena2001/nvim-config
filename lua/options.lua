@@ -76,8 +76,21 @@ vim.opt.updatetime = 50
 -- lua/statusline.lua draws the mode, so Neovim's own -- INSERT -- line is
 -- a second copy of it.
 vim.opt.showmode = false
+-- One statusline for the whole editor rather than one per window, drawn on the
+-- row directly above the command line.
 vim.opt.laststatus = 3
-vim.opt.cmdheight = 0
+-- A row kept for the command line. `cmdheight = 0` reclaims it, but then there
+-- is nowhere to draw a message, and Neovim raises a hit-enter prompt for each
+-- one instead -- which is what typing felt like, since completion talks on
+-- every keypress. Neovim also documents 0 as experimental.
+vim.opt.cmdheight = 1
+
+-- Completion narrates itself: "match 1 of 103" every time the popup opens,
+-- plus the "scanning" notes under it. There is a row for that now, but it is
+-- still a line of flicker reporting what the popup is already showing.
+-- `c` and `C` silence those two groups (`:h shm-c`, `:h shm-C`) and leave
+-- every other message alone.
+vim.opt.shortmess:append("cC")
 
 -- Undercurl
 vim.cmd([[let &t_Cs = "\e[4:3m"]])
