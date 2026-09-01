@@ -315,30 +315,56 @@ vim.diagnostic.config({
 
 -- `autotrigger` opens the popup on the server's `triggerCharacters` and on
 -- nothing else, so left alone it only fires after `.` or `:` -- never while you
--- are part way through a name. Adding the word characters is the documented way
--- to trigger on every keypress (`:h vim.lsp.completion.enable()`), and it is
--- also the only thing that makes LuaSnip's items reachable, since a snippet
--- trigger is plain letters with no punctuation to fire on.
+-- are part way through a name, and never on a snippet trigger, which is plain
+-- letters with no punctuation to fire on.
 --
--- The list is rebuilt as a set rather than appended to: `server_capabilities` is
--- one table shared by every buffer the client attaches to, and appending would
--- grow it on each attach.
+-- `:h lsp-autocompletion` gives two ways to fire on every keypress. The first
+-- is to add the word characters to the server's own `triggerCharacters`. Do not
+-- do that: it does not change when *we* ask, it changes what we claim the
+-- server said. Neovim then sends `triggerKind = TriggerCharacter` with
+-- `triggerCharacter = "t"`, and a server that checks the character against the
+-- list it actually advertised rejects it -- tsc panics with "Unknown trigger
+-- character: t", ruff with a -32603 on every keystroke.
+--
+-- The second way asks directly. `vim.lsp.completion.get()` defaults to
+-- `triggerKind = Invoked` and sends no character at all, so there is nothing
+-- for a server to disagree with. Driving it from InsertCharPre gives the same
+-- popup-on-every-letter without misreporting anyone's capabilities.
 local function enable_completion(client, bufnr)
-  local provider = client.server_capabilities.completionProvider
-  if not provider then
+  if not client.server_capabilities.completionProvider then
     return
   end
 
-  local chars = {}
-  for _, char in ipairs(provider.triggerCharacters or {}) do
-    chars[char] = true
-  end
-  for char in ("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"):gmatch(".") do
-    chars[char] = true
-  end
-  provider.triggerCharacters = vim.tbl_keys(chars)
+  vim.lsp.completion.enable(true, client.id, bufnr)
 
-  vim.lsp.completion.enable(true, client.id, bufnr, { autotrigger = true })
+  -- One trigger per buffer, not per client. `vim.lsp.completion.get()` asks
+  -- every client enabled for the buffer, so a second autocmd here would only
+  -- duplicate each request -- and this runs once per attach, of which there are
+  -- as many as there are servers.
+  if vim.b[bufnr].lsp_completion_trigger then
+    return
+  end
+  vim.b[bufnr].lsp_completion_trigger = true
+
+  vim.api.nvim_create_autocmd("InsertCharPre", {
+    group = vim.api.nvim_create_augroup("LspCompletionTrigger", { clear = false }),
+    buffer = bufnr,
+    callback = function()
+      -- Word characters only. Punctuation a server does declare as a trigger is
+      -- already handled by `vim.lsp.completion.enable`, and asking again on `(`
+      -- or `,` would only duplicate the request it is about to make.
+      if not vim.v.char:match("[%w_]") then
+        return
+      end
+
+      -- Scheduled because InsertCharPre runs before the character lands, and a
+      -- request built here would carry the prefix as it was one keystroke ago.
+      -- No `pumvisible` guard: vim.lsp.completion already drops the request
+      -- when the popup is up, except when the last result was incomplete --
+      -- which is exactly when it should ask again.
+      vim.schedule(vim.lsp.completion.get)
+    end,
+  })
 end
 
 vim.api.nvim_create_autocmd("LspAttach", {
