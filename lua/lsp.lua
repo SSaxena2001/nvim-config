@@ -387,4 +387,11 @@ vim.api.nvim_create_autocmd("LspAttach", {
 -- appending left `menuone` off, so the autotrigger popup stayed hidden
 -- whenever the server returned exactly one candidate -- the common case when
 -- completing a partly typed identifier.
-vim.opt.completeopt = { "menu", "menuone", "noselect", "popup", "fuzzy" }
+--
+-- `noinsert` is what separates moving from accepting. Without it, <C-n> writes
+-- the highlighted item straight into the buffer, so walking the menu with Tab
+-- (lua/keymaps.lua) reads as having accepted every item you passed over. With
+-- it, cycling only moves the highlight and nothing lands until <CR> confirms.
+-- `noselect` keeps the first item from being highlighted the moment the popup
+-- opens, so <CR> stays a newline until you have actually picked something.
+vim.opt.completeopt = { "menu", "menuone", "noinsert", "noselect", "popup", "fuzzy" }
