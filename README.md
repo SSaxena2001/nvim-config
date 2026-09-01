@@ -56,6 +56,11 @@ table answering `initialize`, `completion` and `resolve`. Its triggers then
 sort and render in the same popup as the servers'. Drop your own VS Code-format
 JSON in `snippets/` beside this file and it is picked up too.
 
+`jsregexp` backs the snippets that transform a tabstop with a regex rather than
+mirroring it. LuaSnip ships the C source and does not build it, so
+`lua/pack.lua` carries a `PackChanged` hook that runs `make install_jsregexp`
+whenever LuaSnip is installed or updated.
+
 | Key | Mode | What |
 |---|---|---|
 | `<Tab>` / `<S-Tab>` | insert | Walk the popup without accepting |

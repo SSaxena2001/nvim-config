@@ -6,6 +6,38 @@
 -- far better. Everything else -- completion, LSP, `:find` and `:grep`
 -- themselves -- is handled by Neovim in the modules beside this one.
 
+-- Build hooks. `vim.pack` clones a plugin and stops there -- it has no notion of
+-- a build step -- so anything that ships C has to be compiled here. Registered
+-- before `vim.pack.add` below, because that call installs missing plugins and
+-- fires `PackChanged` on the way; an autocmd created afterwards would miss the
+-- install and only ever see later updates.
+--
+-- LuaSnip: `make install_jsregexp` builds the regex engine behind snippet
+-- transformations -- the tabstops that rewrite an earlier field rather than
+-- mirroring it. Without it those snippets error on expansion and the rest are
+-- unaffected, which is why LuaSnip treats it as optional and does not build it
+-- itself. Async: this runs on install and update only, and there is no reason
+-- to hold up startup waiting for a compiler.
+vim.api.nvim_create_autocmd("PackChanged", {
+  group = vim.api.nvim_create_augroup("PackBuildHooks", { clear = true }),
+  callback = function(e)
+    local data = e.data
+    if data.spec.name ~= "LuaSnip" or (data.kind ~= "install" and data.kind ~= "update") then
+      return
+    end
+
+    vim.system({ "make", "install_jsregexp" }, { cwd = data.path }, function(out)
+      vim.schedule(function()
+        if out.code == 0 then
+          vim.notify("LuaSnip: jsregexp built", vim.log.levels.INFO)
+        else
+          vim.notify("LuaSnip: jsregexp build failed\n" .. (out.stderr or ""), vim.log.levels.ERROR)
+        end
+      end)
+    end)
+  end,
+})
+
 vim.pack.add({
   -- Neovim ships parsers for c, lua, markdown, query, vim and vimdoc only.
   -- Every other language needs nvim-treesitter to fetch and build one.
