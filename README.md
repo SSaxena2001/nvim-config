@@ -46,14 +46,23 @@ to fzf-lua, which already prefers fd and streams it from a separate process.
 
 Neovim's own `vim.lsp.completion`, not nvim-cmp. The popup opens as you type:
 `lua/lsp.lua` adds the word characters to each server's `triggerCharacters`,
-which is what `autotrigger` fires on. There is no snippet library: a server's
-own snippet completions still expand, through `vim.snippet`, but nothing here
-supplies triggers of its own.
+which is what `autotrigger` fires on.
+
+Snippets come from LuaSnip, stocked by friendly-snippets -- curated rather than
+exhaustive, a few dozen per language across 129 of them. `vim.snippet` can
+expand what a server sends back but has no store of its own, so
+`lua/plugins/luasnip.lua` registers LuaSnip as an in-process LSP client -- a
+table answering `initialize`, `completion` and `resolve`. Its triggers then
+sort and render in the same popup as the servers'. Drop your own VS Code-format
+JSON in `snippets/` beside this file and it is picked up too.
 
 | Key | Mode | What |
 |---|---|---|
-| `<C-y>` | insert | Accept the selected item; a server's snippet expands on accept |
-| `<C-e>` | insert | Dismiss the popup |
+| `<Tab>` / `<S-Tab>` | insert | Walk the popup without accepting |
+| `<CR>` / `<C-y>` | insert | Accept the selected item; a snippet expands on accept |
+| `<C-e>` | insert | Dismiss the popup, or cycle a snippet's choice node |
+| `<C-k>` | insert | Expand or jump to the next tabstop; signature help when no snippet is active |
+| `<C-j>` | insert | Jump to the previous tabstop |
 | `<C-h>` | insert | Signature help |
 | `<C-x><C-o>` | insert | Open the popup by hand |
 

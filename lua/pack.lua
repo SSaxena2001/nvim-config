@@ -5,6 +5,7 @@
 -- Plugins earn their place by doing something Neovim cannot, or by doing it
 -- far better. Everything else -- completion, LSP, `:find` and `:grep`
 -- themselves -- is handled by Neovim in the modules beside this one.
+
 vim.pack.add({
   -- Neovim ships parsers for c, lua, markdown, query, vim and vimdoc only.
   -- Every other language needs nvim-treesitter to fetch and build one.
@@ -34,6 +35,16 @@ vim.pack.add({
 
   -- AI inline completion. No native equivalent.
   { src = "https://github.com/supermaven-inc/supermaven-nvim" },
+
+  -- Snippet engine. `vim.snippet` can expand an LSP snippet the server sends
+  -- back, but it has no store of its own and no way to define one, so there is
+  -- nothing to complete over until a plugin supplies the snippets.
+  { src = "https://github.com/L3MON4D3/LuaSnip" },
+  -- The snippets themselves. LuaSnip ships an engine and zero content. Curated
+  -- rather than exhaustive -- a few dozen per language, not the several hundred
+  -- a bulk port of vim-snippets gives you, which only buries what the language
+  -- server returned.
+  { src = "https://github.com/rafamadriz/friendly-snippets" },
 
   -- Formatter dispatch on save, with an LSP fallback. Replaces the hand-rolled
   -- BufWritePre autocmd this config used to carry.
@@ -90,6 +101,7 @@ require("plugins.oil")
 require("plugins.statuscolumn")
 require("plugins.quicker")
 require("plugins.fzf")
+require("plugins.luasnip")
 require("plugins.conform")
 require("plugins.harpoon")
 require("plugins.which-key")

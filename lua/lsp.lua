@@ -316,7 +316,9 @@ vim.diagnostic.config({
 -- `autotrigger` opens the popup on the server's `triggerCharacters` and on
 -- nothing else, so left alone it only fires after `.` or `:` -- never while you
 -- are part way through a name. Adding the word characters is the documented way
--- to trigger on every keypress (`:h vim.lsp.completion.enable()`).
+-- to trigger on every keypress (`:h vim.lsp.completion.enable()`), and it is
+-- also the only thing that makes LuaSnip's items reachable, since a snippet
+-- trigger is plain letters with no punctuation to fire on.
 --
 -- The list is rebuilt as a set rather than appended to: `server_capabilities` is
 -- one table shared by every buffer the client attaches to, and appending would
@@ -344,6 +346,16 @@ vim.api.nvim_create_autocmd("LspAttach", {
   callback = function(e)
     local client = vim.lsp.get_client_by_id(e.data.client_id)
 
+    -- The snippet source in lua/plugins/luasnip.lua is an in-process LSP client,
+    -- so that its items land in the same popup as the real servers'. It answers
+    -- nothing but completion, and it attaches to every buffer -- so it gets the
+    -- completion wiring below and none of the keymaps. Binding `gd` and `K` in a
+    -- buffer with no language server would shadow what they already do.
+    if client and client.name == "luasnip" then
+      enable_completion(client, e.buf)
+      return
+    end
+
     local opts = { buffer = e.buf }
 
     vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
@@ -361,7 +373,19 @@ vim.api.nvim_create_autocmd("LspAttach", {
     -- running `stty erase ^H` sends for Backspace -- mapping it there costs
     -- Backspace in every buffer a server attaches to. <C-k> gives up
     -- insert-mode digraphs instead, which is a far cheaper thing to lose.
+    --
+    -- This is buffer-local and so shadows LuaSnip's global <C-k>
+    -- (lua/plugins/luasnip.lua) in exactly the buffers you write code in. The
+    -- snippet jump goes first: it only answers while a snippet is actually
+    -- expandable or active, and inside a tabstop "next field" is the only
+    -- reading of the key. Everywhere else it falls through to the signature.
     vim.keymap.set("i", "<C-k>", function()
+      local ok, ls = pcall(require, "luasnip")
+      if ok and ls.expand_or_jumpable() then
+        ls.expand_or_jump()
+        return
+      end
+
       vim.lsp.buf.signature_help({ border = "rounded" })
     end, opts)
 
