@@ -1,15 +1,17 @@
--- Solarized Osaka: a Solarized-derived dark scheme built on tokyonight's
--- engine, so it takes tokyonight's `styles`/`on_highlights` shape.
-require("solarized-osaka").setup({
-  style = "",
-  transparent = true,
-  terminal_colors = true,
-
+-- Rosé Pine. `variant = "auto"` reads 'background', so it renders as dawn
+-- under `:set background=light` and as `dark_variant` otherwise -- no reload
+-- and no second colorscheme call to switch.
+require("rose-pine").setup({
+  variant = "moon",
+  dark_variant = "main",
+  disable_italics = true,
   styles = {
-    floats = "transparent",
-    sidebars = "transparent",
+    -- Let the terminal's own background through instead of painting the
+    -- scheme's base over it.
+    transparency = true,
+    italics = false,
+    bold = true,
   },
-  sidebars = { "qf", "help" },
 })
 
-vim.cmd.colorscheme("solarized-osaka")
+vim.cmd.colorscheme("rose-pine")

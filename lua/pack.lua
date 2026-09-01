@@ -11,7 +11,13 @@ vim.pack.add({
   { src = "https://github.com/nvim-treesitter/nvim-treesitter", version = "main" },
   { src = "https://github.com/nvim-treesitter/nvim-treesitter-textobjects", version = "main" },
 
-  -- Colorscheme. Configured in lua/colorscheme.lua.
+  -- Colorscheme. Configured in lua/colorscheme.lua. The repo is named
+  -- `neovim`, which is what vim.pack would otherwise install it as, so `name`
+  -- pins the directory to what `require("rose-pine")` expects.
+  { src = "https://github.com/rose-pine/neovim", name = "rose-pine" },
+
+  -- Previous colorscheme, kept installed to switch back to. Nothing sets it
+  -- up: lua/colorscheme.lua loads rose-pine.
   { src = "https://github.com/craftzdog/solarized-osaka.nvim" },
 
   -- Sign-column git hunks. No native equivalent.
