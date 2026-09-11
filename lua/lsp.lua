@@ -1,14 +1,6 @@
 -- LSP, in one file.
---
--- There is no nvim-lspconfig here and Neovim ships no `runtime/lsp/` configs
--- of its own, so every server has to state its own `cmd`, `filetypes` and
--- `root_markers` -- `vim.lsp.enable` finds nothing to start otherwise.
--- Everything past those three keys is a deliberate exception, not boilerplate.
 
 local capabilities = vim.lsp.protocol.make_client_capabilities()
--- Completion is Neovim's own `vim.lsp.completion` (below), so there is no
--- nvim-cmp to merge extras in from. snippetSupport is still worth asking for:
--- it is what makes servers return signatures with placeholders, not bare names.
 capabilities.textDocument.completion.completionItem.snippetSupport = true
 
 vim.lsp.config("*", {
@@ -68,9 +60,6 @@ vim.lsp.config("tsc", {
   end,
   filetypes = { "javascript", "javascriptreact", "typescript", "typescriptreact" },
   root_dir = function(bufnr, on_dir)
-    -- Lockfiles first so a monorepo reuses one server, then TS/JS markers.
-    -- Two calls rather than one nested `root_markers` list: this is vim.fs.root,
-    -- which takes a flat list, and the fallback is what encodes the priority.
     local root = vim.fs.root(bufnr, { "package-lock.json", "yarn.lock", "pnpm-lock.yaml", "bun.lockb", "bun.lock" })
       or vim.fs.root(bufnr, { "tsconfig.json", "jsconfig.json", "package.json", ".git" })
     if not root then
@@ -269,11 +258,40 @@ vim.lsp.enable({
 })
 
 -- Diagnostics ---------------------------------------------------------------
+
 local signs = {
-  ERROR = "",
+  ERROR = "",
   HINT = "",
   WARN = "",
   INFO = "",
+}
+
+local kind_icons = {
+  "", -- Text
+  "", -- Method
+  "", -- Function
+  "", -- Constructor
+  "", -- Field
+  "", -- Variable
+  "", -- Class
+  "ﰮ", -- Interface
+  "", -- Module
+  "", -- Property
+  "", -- Unit
+  "", -- Value
+  "", -- Enum
+  "", -- Keyword
+  "﬌", -- Snippet
+  "", -- Color
+  "", -- File
+  "", -- Reference
+  "", -- Folder
+  "", -- EnumMember
+  "", -- Constant
+  "", -- Struct
+  "", -- Event
+  "ﬦ", -- Operator
+  "", -- TypeParameter
 }
 
 vim.diagnostic.config({
@@ -304,10 +322,6 @@ vim.diagnostic.config({
   underline = true,
   update_in_insert = false,
   severity_sort = true,
-  -- The underline already marks the offending span. Inline text repeats that
-  -- information at the end of the line, where it covers whatever is to the
-  -- right and reflows on every edit. The message is a keystroke away either
-  -- way: `<leader>ld` opens the float, and ]d / [d open it on arrival.
   virtual_text = false,
 })
 
@@ -335,12 +349,12 @@ local function enable_completion(client, bufnr)
     return
   end
 
-  vim.lsp.completion.enable(true, client.id, bufnr)
+  vim.lsp.completion.enable(true, client.id, bufnr, {
+    convert = function(item)
+      return { kind = kind_icons[item.kind] or "" }
+    end,
+  })
 
-  -- One trigger per buffer, not per client. `vim.lsp.completion.get()` asks
-  -- every client enabled for the buffer, so a second autocmd here would only
-  -- duplicate each request -- and this runs once per attach, of which there are
-  -- as many as there are servers.
   if vim.b[bufnr].lsp_completion_trigger then
     return
   end
@@ -372,11 +386,6 @@ vim.api.nvim_create_autocmd("LspAttach", {
   callback = function(e)
     local client = vim.lsp.get_client_by_id(e.data.client_id)
 
-    -- The snippet source in lua/plugins/luasnip.lua is an in-process LSP client,
-    -- so that its items land in the same popup as the real servers'. It answers
-    -- nothing but completion, and it attaches to every buffer -- so it gets the
-    -- completion wiring below and none of the keymaps. Binding `gd` and `K` in a
-    -- buffer with no language server would shadow what they already do.
     if client and client.name == "luasnip" then
       enable_completion(client, e.buf)
       return
@@ -395,16 +404,6 @@ vim.api.nvim_create_autocmd("LspAttach", {
     -- often enough not to live behind the <leader>l group.
     vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, opts)
     vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
-    -- <C-k>, not <C-h>: <C-h> is the byte 0x08, which is what a terminal
-    -- running `stty erase ^H` sends for Backspace -- mapping it there costs
-    -- Backspace in every buffer a server attaches to. <C-k> gives up
-    -- insert-mode digraphs instead, which is a far cheaper thing to lose.
-    --
-    -- This is buffer-local and so shadows LuaSnip's global <C-k>
-    -- (lua/plugins/luasnip.lua) in exactly the buffers you write code in. The
-    -- snippet jump goes first: it only answers while a snippet is actually
-    -- expandable or active, and inside a tabstop "next field" is the only
-    -- reading of the key. Everywhere else it falls through to the signature.
     vim.keymap.set("i", "<C-k>", function()
       local ok, ls = pcall(require, "luasnip")
       if ok and ls.expand_or_jumpable() then
@@ -422,24 +421,10 @@ vim.api.nvim_create_autocmd("LspAttach", {
       vim.diagnostic.jump({ count = -1 })
     end, opts)
 
-    -- Native completion, in place of nvim-cmp. Neovim drives the popup from
-    -- the server's items; `autotrigger` opens it as you type rather than only
-    -- on <C-x><C-o>.
     if client and client:supports_method("textDocument/completion") then
       enable_completion(client, e.buf)
     end
   end,
 })
 
--- Set outright rather than appended: 0.12 defaults to "menu,popup", and
--- appending left `menuone` off, so the autotrigger popup stayed hidden
--- whenever the server returned exactly one candidate -- the common case when
--- completing a partly typed identifier.
---
--- `noinsert` is what separates moving from accepting. Without it, <C-n> writes
--- the highlighted item straight into the buffer, so walking the menu with Tab
--- (lua/keymaps.lua) reads as having accepted every item you passed over. With
--- it, cycling only moves the highlight and nothing lands until <CR> confirms.
--- `noselect` keeps the first item from being highlighted the moment the popup
--- opens, so <CR> stays a newline until you have actually picked something.
 vim.opt.completeopt = { "menu", "menuone", "noinsert", "noselect", "popup", "fuzzy" }
