@@ -32,3 +32,5 @@ vim.api.nvim_create_autocmd("BufReadPost", {
     end
   end,
 })
+
+require("vim._core.ui2").enable({})
