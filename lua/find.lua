@@ -51,14 +51,13 @@ local fallback_dirs = {
   "zig-out",
 }
 
--- The file list `:find` completes over. lua/plugins/fzf.lua reuses this so
--- the fzf picker and `:find` see the same set of files.
+-- The file list `:find` completes over. fff keeps its own index for the `;f`
+-- picker, so this is `:find`'s alone now.
 --
 -- fd first, ripgrep second, nil when neither is installed. Both are given the
 -- same three properties: hidden files included, .gitignore obeyed even outside
 -- a repository, `.git` itself skipped. The `--hidden` and `--no-ignore` flags
--- are spelled the same either way, which is what fzf-lua's alt-h/alt-i toggles
--- rewrite.
+-- are spelled the same either way.
 function M.files_command()
   if vim.fn.executable("fd") == 1 then
     local args = {

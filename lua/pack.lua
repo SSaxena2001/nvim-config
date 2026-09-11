@@ -7,26 +7,21 @@
 -- themselves -- is handled by Neovim in the modules beside this one.
 
 -- Build hooks. `vim.pack` clones a plugin and stops there -- it has no notion of
--- a build step -- so anything that ships C has to be compiled here. Registered
--- before `vim.pack.add` below, because that call installs missing plugins and
--- fires `PackChanged` on the way; an autocmd created afterwards would miss the
--- install and only ever see later updates.
+-- a build step -- so anything that ships native code has to be compiled here.
+-- Registered before `vim.pack.add` below, because that call installs missing
+-- plugins and fires `PackChanged` on the way; an autocmd created afterwards
+-- would miss the install and only ever see later updates.
 --
--- LuaSnip: `make install_jsregexp` builds the regex engine behind snippet
--- transformations -- the tabstops that rewrite an earlier field rather than
--- mirroring it. Without it those snippets error on expansion and the rest are
--- unaffected, which is why LuaSnip treats it as optional and does not build it
--- itself. Async: this runs on install and update only, and there is no reason
--- to hold up startup waiting for a compiler.
-vim.api.nvim_create_autocmd("PackChanged", {
-  group = vim.api.nvim_create_augroup("PackBuildHooks", { clear = true }),
-  callback = function(e)
-    local data = e.data
-    if data.spec.name ~= "LuaSnip" or (data.kind ~= "install" and data.kind ~= "update") then
-      return
-    end
-
-    vim.system({ "make", "install_jsregexp" }, { cwd = data.path }, function(out)
+-- Async, both of them: these run on install and update only, and there is no
+-- reason to hold up startup waiting for a compiler.
+local builders = {
+  -- `make install_jsregexp` builds the regex engine behind snippet
+  -- transformations -- the tabstops that rewrite an earlier field rather than
+  -- mirroring it. Without it those snippets error on expansion and the rest
+  -- are unaffected, which is why LuaSnip treats it as optional and does not
+  -- build it itself.
+  LuaSnip = function(path)
+    vim.system({ "make", "install_jsregexp" }, { cwd = path }, function(out)
       vim.schedule(function()
         if out.code == 0 then
           vim.notify("LuaSnip: jsregexp built", vim.log.levels.INFO)
@@ -35,6 +30,31 @@ vim.api.nvim_create_autocmd("PackChanged", {
         end
       end)
     end)
+  end,
+
+  -- fff is a Rust binary with a Lua shim over it, and the shim is useless
+  -- without the binary. Its own downloader fetches a prebuilt one for this
+  -- platform and falls back to `cargo build` when there is none.
+  fff = function()
+    require("fff.download").download_or_build_binary()
+  end,
+}
+
+vim.api.nvim_create_autocmd("PackChanged", {
+  group = vim.api.nvim_create_augroup("PackBuildHooks", { clear = true }),
+  callback = function(e)
+    local data = e.data
+    local build = builders[data.spec.name]
+    if not build or (data.kind ~= "install" and data.kind ~= "update") then
+      return
+    end
+
+    -- A freshly installed plugin is not on the runtimepath yet, so anything
+    -- that has to `require` its own Lua needs it added first.
+    if not data.active then
+      vim.cmd.packadd(data.spec.name)
+    end
+    build(data.path)
   end,
 })
 
@@ -49,14 +69,21 @@ vim.pack.add({
   -- to name from the same parsers as above.
   { src = "https://github.com/nvim-treesitter/nvim-treesitter-context" },
 
-  -- Colorscheme. Configured in lua/colorscheme.lua. The repo is named
+  -- Split a node onto several lines, or join it back onto one. Reads the same
+  -- parsers as the two above, which is what lets it know where the separators
+  -- and the trailing comma go -- `gq` and `J` only see lines and characters.
+  { src = "https://github.com/Wansmer/treesj" },
+
+  -- Colorscheme. Configured in lua/colorscheme.lua.
+  { src = "https://github.com/craftzdog/solarized-osaka.nvim" },
+
+  -- Previous colorschemes, kept installed to switch back to. Nothing sets
+  -- either up: lua/colorscheme.lua loads solarized-osaka, which is a fork of
+  -- tokyonight -- the two take the same options. The rose-pine repo is named
   -- `neovim`, which is what vim.pack would otherwise install it as, so `name`
   -- pins the directory to what `require("rose-pine")` expects.
+  { src = "https://github.com/folke/tokyonight.nvim" },
   { src = "https://github.com/rose-pine/neovim", name = "rose-pine" },
-
-  -- Previous colorscheme, kept installed to switch back to. Nothing sets it
-  -- up: lua/colorscheme.lua loads rose-pine.
-  { src = "https://github.com/craftzdog/solarized-osaka.nvim" },
 
   -- Sign-column git hunks. No native equivalent.
   { src = "https://github.com/lewis6991/gitsigns.nvim" },
@@ -67,6 +94,9 @@ vim.pack.add({
 
   -- AI inline completion. No native equivalent.
   { src = "https://github.com/supermaven-inc/supermaven-nvim" },
+
+  -- Auto-close brackets, quotes and tags. Neovim has no built-in equivalent.
+  { src = "https://github.com/windwp/nvim-autopairs" },
 
   -- Snippet engine. `vim.snippet` can expand an LSP snippet the server sends
   -- back, but it has no store of its own and no way to define one, so there is
@@ -98,41 +128,43 @@ vim.pack.add({
   -- File explorer as an editable buffer. Replaces netrw.
   { src = "https://github.com/stevearc/oil.nvim" },
 
-  -- Fuzzy picker. Matching runs in the fzf binary and the file/grep providers
-  -- run in a separate Neovim process, so it stays responsive where an
-  -- in-process Lua matcher would not. Sits on top of the native layer rather
-  -- than replacing it: see lua/picker.lua.
-  { src = "https://github.com/ibhagwan/fzf-lua" },
+  -- Fuzzy file and content search. A Rust core holding its own file tree and
+  -- content index, so repeated searches in one session beat shelling out to
+  -- fd/rg per keystroke, and ranking is frecency- and git-aware rather than
+  -- pure match order. Files and grep only -- the rest of the ";" prefix is
+  -- native now: see lua/picker.lua. Built by the hook above.
+  { src = "https://github.com/dmtrKovalenko/fff" },
 
   -- Popup listing what a half-typed prefix can still become. Neovim has no
   -- equivalent; the `desc` on every keymap here is what it reads.
   { src = "https://github.com/folke/which-key.nvim" },
 
-  -- 'statuscolumn' with the sign, fold and wrapped-line handling worked out.
-  -- The whole of mini.nvim for one module is the only way to get it: unlike
-  -- the rest of the family, mini.statuscolumn has no standalone repository
-  -- yet. Nothing else in here runs -- a mini module does nothing until its own
-  -- setup() is called, and lua/plugins/statuscolumn.lua calls exactly one.
-  { src = "https://github.com/echasnovski/mini.nvim" },
-
   -- Quickfix styling, context lines and an editable quickfix buffer. This
   -- config routes grep, diagnostics and symbols through the quickfix list, so
   -- it is the window most of the pickers land in.
   { src = "https://github.com/stevearc/quicker.nvim" },
+
+  -- `[`/`]` motions over buffers, comments, indent, jumps, undo states and
+  -- more. Neovim ships a handful of these natively (`]c`, `]m`, `]s`) but only
+  -- a handful, and each with its own quirks. The standalone module, not the
+  -- mini.nvim monorepo: this one has its own repository.
+  { src = "https://github.com/nvim-mini/mini.bracketed" },
 })
 
 -- Mason first: it puts the server binaries on $PATH that lua/lsp/ launches.
 require("plugins.mason")
 require("plugins.treesitter")
 require("plugins.treesitter-context")
+require("plugins.treesj")
 require("plugins.gitsigns")
 require("plugins.fugitive")
 require("plugins.supermaven")
+require("plugins.autopairs")
 require("plugins.devicons")
 require("plugins.oil")
-require("plugins.statuscolumn")
 require("plugins.quicker")
-require("plugins.fzf")
+require("plugins.bracketed")
+require("plugins.fff")
 require("plugins.luasnip")
 require("plugins.conform")
 require("plugins.harpoon")

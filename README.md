@@ -12,7 +12,7 @@ no built-in equivalent are installed by `vim.pack` (Neovim 0.12+).
 | `init.lua` | Module load order |
 | `lua/options.lua` | `vim.opt` settings |
 | `lua/keymaps.lua` | Global keymaps |
-| `lua/picker.lua` | The `;` prefix — fzf-lua pickers |
+| `lua/picker.lua` | The `;` prefix — fff pickers, and native ones |
 | `lua/pack.lua` | `vim.pack.add` plugin list |
 | `lua/plugins/` | Per-plugin setup |
 | `lua/lsp.lua` | Native LSP: server configs, attach keymaps, diagnostics, completion |
@@ -23,11 +23,17 @@ no built-in equivalent are installed by `vim.pack` (Neovim 0.12+).
 
 ## Pickers
 
-The `;` prefix, on fzf-lua. `<CR>` opens a single selection, `<C-q>` sends the
-whole result set to the quickfix list, which quicker.nvim styles and makes
-editable, and `;;` reopens it. `;f` searches from the project root that
-`lua/find.lua` resolves, the same root `:find` uses; the listing itself is left
-to fzf-lua, which already prefers fd and streams it from a separate process.
+The `;` prefix. `;f`/`;P` find files and `;r`/`;w` grep, all four on fff;
+`<CR>` opens a selection, `<Tab>` multi-selects and `<C-q>` sends the result to
+the quickfix list, which quicker.nvim styles and makes editable, and `;;`
+reopens it. `;f` and the greps search from the project root `lua/find.lua`
+resolves, the same root `:find` uses.
+
+The rest are native. fff does files and content and nothing else, so `;t` rides
+`:help`'s own tag completion, `\` rides `:buffer`'s — `wildoptions=pum` draws
+both as popups — `;e` and `;s` fill the quickfix list from `vim.diagnostic` and
+`vim.lsp.buf`, and `;g` opens fugitive's status buffer, where the changed files
+can also be staged and committed.
 
 | Key | What |
 |---|---|
@@ -95,21 +101,32 @@ and `showmode = false` stops Neovim printing a second `-- INSERT --` below it.
 
 ## Plugins
 
-Sixteen, all either without a native equivalent or required to install one:
+Eighteen, all either without a native equivalent or required to install one:
 
 - `nvim-treesitter` + `nvim-treesitter-textobjects` — Neovim ships parsers for
   only c/lua/markdown/query/vim/vimdoc. Highlighting starts on `FileType`; the
   parser list lives in `lua/plugins/treesitter.lua`.
   Folds come from the tree (`foldexpr`, see `lua/options.lua`).
+- `treesj` — `<leader>m` splits the node under the cursor across lines, or
+  joins it back onto one, configured in `lua/plugins/treesj.lua`. It reads the
+  treesitter tree, so it knows an argument list from a table constructor and
+  puts the separators, the trailing comma and the indent where they belong —
+  `J` only sees lines. Its default keymaps are off; `<leader>s` is already
+  Substitute word.
 - `solarized-osaka.nvim` — the colorscheme, configured in
   `lua/colorscheme.lua`. Set `style = "vivid"` there for the higher-contrast
-  variant. It runs transparent, so the terminal's own background shows
-  through.
-- `fzf-lua` — the `;` pickers. LSP navigation is Neovim's own `vim.lsp.buf.*`,
-  not a picker.
-  Matching runs in the `fzf` binary and the file/grep providers run in a
-  separate Neovim process, so it stays responsive on large trees. `:find` and
-  `:grep` still work on their own underneath.
+  variant; 'background' selects between it and `light_style`. It runs
+  transparent, so the terminal's own background shows through.
+  `tokyonight.nvim` (which it forks) and `rose-pine` stay installed but
+  unconfigured, to switch back to.
+- `nvim-autopairs` — auto-closes brackets, quotes and tags. Treesitter-aware,
+  so it does not pair inside strings or comments.
+- `fff` — the `;f`/`;P` file and `;r`/`;w` grep pickers, configured in
+  `lua/plugins/fff.lua`. A Rust core holding its own file tree and content
+  index, so repeated searches beat shelling out per keystroke, and ranking is
+  frecency- and git-aware. Files and content only; the other `;` mappings are
+  native. `:find` and `:grep` still work on their own underneath. The build
+  hook in `lua/pack.lua` fetches its binary.
 - `conform.nvim` — formatter dispatch on save, with an LSP fallback
 - `harpoon` (branch `harpoon2`) + `plenary.nvim` — pinned files, jumped to by
   index
@@ -128,17 +145,14 @@ Sixteen, all either without a native equivalent or required to install one:
   are named, in `lua/plugins/which-key.lua`.
 - `quicker.nvim` — quickfix styling, context lines, and an editable quickfix
   buffer. `<C-q>` from any picker lands here.
-- `nvim-web-devicons` — filetype icons for oil and the fzf-lua pickers. Needs a
+- `mini.bracketed` — `[`/`]` motions over buffers, comments, indent, jumps,
+  undo states and more, one suffix per target, each taking a count. Set up in
+  `lua/plugins/bracketed.lua`, which switches off the targets this config
+  already answers (`[q`/`]q` stay on `cprev`/`cnext`) and moves treesitter onto
+  `[n`/`]n` so `[t`/`]t` keep Neovim's tag stack. The standalone module, not
+  the mini.nvim monorepo.
+- `nvim-web-devicons` — filetype icons for oil. Needs a
   Nerd Font in the terminal.
-- `mini.nvim` — for one module, `mini.statuscolumn`, set up in
-  `lua/plugins/statuscolumn.lua`. It draws the column left of the text: line
-  numbers, signs, fold markers, a `▏` separator, and dimming in inactive
-  windows. `'statuscolumn'` is a native option, but the awkward parts are the
-  ones around the sections — holding the width steady as signs appear, and
-  marking wrapped and virtual lines instead of repeating a line number. The
-  whole repository comes along because `mini.statuscolumn` has no standalone
-  one yet; no other module in it runs, since a mini module does nothing until
-  its own `setup()` is called.
 
 ## External binaries
 
@@ -149,7 +163,7 @@ Servers and formatters are installed by mason on first launch (see
 Not covered by mason, install these yourself:
 
 ```
-brew install fd ripgrep fzf lazygit
+brew install fd ripgrep lazygit
 ```
 
 `ols` and `odinfmt` do come from mason, but neither carries a compiler: ols

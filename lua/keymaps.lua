@@ -29,7 +29,18 @@ map("n", "n", "nzzzv")
 map("n", "N", "Nzzzv")
 
 -- Editing ----------------------------------------------------------------
-map("i", "<C-c>", "<Esc>")
+-- <C-c> already leaves insert mode on its own, so this looks redundant. It is
+-- not: bare <C-c> skips abbreviation expansion and never fires InsertLeave
+-- (`:h i_CTRL-C`), which silently costs us everything hanging off that event --
+-- LuaSnip's region check, gitsigns' refresh, the format-on-save bookkeeping.
+-- Mapping it to <Esc> makes the cheaper key do the whole job.
+map("i", "<C-c>", "<Esc>", { desc = "Leave insert mode (fires InsertLeave)" })
+
+-- The other way out, for the hand that never left the home row. No English
+-- word puts a `k` straight after a `j`, so nothing legitimate is shadowed --
+-- the only cost is that a trailing `j` waits out 'timeoutlen' before it is
+-- drawn, which is why that stays at the default rather than being raised.
+map("i", "jk", "<Esc>", { desc = "Leave insert mode" })
 
 -- Completion -------------------------------------------------------------
 -- Walk the native completion popup (`vim.lsp.completion`, set up in
@@ -37,34 +48,44 @@ map("i", "<C-c>", "<Esc>")
 -- from accepting because `completeopt` carries `noinsert`; see the note beside
 -- it in lua/lsp.lua.
 --
--- These are expr maps returning replacement keys rather than acting directly.
--- `replace_keycodes` defaults to true alongside `expr`, so the returned names
--- are translated for us.
---
+-- These are expr maps returning replacement keys rather than acting directly,
+-- and they hand back raw termcodes -- `replace_keycodes = false` -- because
+-- <CR> below has to pass through nvim-autopairs, whose return is escaped
+-- already. Escaping ours the same way keeps all three consistent.
+local function keys(s)
+  return vim.api.nvim_replace_termcodes(s, true, false, true)
+end
+
 -- Guarded on `pumvisible()`, so with no popup open Tab still indents and
 -- S-Tab is still inert -- the bindings cost nothing outside the menu.
 -- Supermaven's accept is <C-l>, so taking an inline suggestion never competes
 -- with cycling the menu.
 map("i", "<Tab>", function()
-  return vim.fn.pumvisible() == 1 and "<C-n>" or "<Tab>"
-end, { expr = true, desc = "Next completion item" })
+  return keys(vim.fn.pumvisible() == 1 and "<C-n>" or "<Tab>")
+end, { expr = true, replace_keycodes = false, desc = "Next completion item" })
 
 map("i", "<S-Tab>", function()
-  return vim.fn.pumvisible() == 1 and "<C-p>" or "<S-Tab>"
-end, { expr = true, desc = "Previous completion item" })
+  return keys(vim.fn.pumvisible() == 1 and "<C-p>" or "<S-Tab>")
+end, { expr = true, replace_keycodes = false, desc = "Previous completion item" })
 
 -- <C-y> and not a bare <CR>: what <CR> does to an open popup differs by
 -- `completeopt`, and with `noinsert` the highlighted item is not in the buffer
 -- yet, so anything short of an explicit accept drops it. `selected` is -1
 -- while `noselect` leaves nothing highlighted -- that case is a real newline,
 -- not an accept of whatever happens to be first.
+--
+-- nvim-autopairs also maps <CR> (its `map_cr`) to split a freshly opened pair
+-- across lines, and lua/keymaps.lua is required last, so this map would
+-- silently replace it. Delegating on the non-completion path keeps that
+-- behaviour; the pcall covers autopairs not being loaded.
 map("i", "<CR>", function()
   if vim.fn.pumvisible() == 1 and vim.fn.complete_info({ "selected" }).selected ~= -1 then
-    return "<C-y>"
+    return keys("<C-y>")
   end
 
-  return "<CR>"
-end, { expr = true, desc = "Accept completion item" })
+  local ok, autopairs = pcall(require, "nvim-autopairs")
+  return ok and autopairs.autopairs_cr() or keys("<CR>")
+end, { expr = true, replace_keycodes = false, desc = "Accept completion item" })
 
 -- Ex mode is never what anyone wants.
 map("n", "Q", "<nop>")
@@ -77,7 +98,16 @@ map("n", "<leader>s", [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]], { 
 -- on both.
 map("n", "<leader>x", "<cmd>!chmod +x %:S<CR>", { silent = true, desc = "chmod +x this file" })
 
--- Windows ----------------------------------------------------------------
+-- Split the node under the cursor across lines, or join it back onto one --
+-- treesj picks the direction from whether it is split already. Which node it
+-- acts on comes from the treesitter tree, not the cursor column, so this works
+-- from anywhere inside the argument list or the table rather than only on its
+-- opening bracket. Configured in lua/plugins/treesj.lua.
+map("n", "<leader>m", function()
+  require("treesj").toggle()
+end, { desc = "Split/join node" })
+
+-- Buffer Windows  ----------------------------------------------------------------
 -- <C-l> is also supermaven's accept_suggestion, but that binding is insert
 -- mode only, so the two never collide.
 map("n", "<C-h>", "<C-w>h", { desc = "Move to left split" })
